@@ -4,8 +4,8 @@
     <child>
       <object class="GtkBox">
         <child>
-          <object class="GtkButton" id="ok_button">
-            <property name="label" translatable="yes">_Ok</property>
+          <object class="GtkButton" id="close_button">
+            <property name="label" translatable="yes">Mach putt</property>
             <property name="use-underline">True</property>
             <!--<signal name="clicked" handler="ok_button_clicked"/>-->
           </object>
