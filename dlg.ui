@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <object class="GtkWindow" id="win1">
+    <child>
+      <object class="GtkBox">
+        <child>
+          <object class="GtkButton" id="ok_button">
+            <property name="label" translatable="yes">_Ok</property>
+            <property name="use-underline">True</property>
+            <!--<signal name="clicked" handler="ok_button_clicked"/>-->
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
