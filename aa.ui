@@ -1,0 +1,120 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.96.1 -->
+<interface>
+  <!-- interface-name aa.ui -->
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkApplicationWindow" id="win1">
+    <property name="default-height">600</property>
+    <property name="default-width">500</property>
+    <child>
+      <object class="GtkBox" id="box1">
+        <child>
+          <object class="GtkBox" id="box11">
+            <property name="orientation">vertical</property>
+            <property name="valign">start</property>
+            <child>
+              <object class="GtkButton" id="btn111">
+                <property name="css-classes">btn11</property>
+                <property name="halign">start</property>
+                <property name="label">btn111</property>
+                <property name="tooltip-text">tooltip btn111</property>
+                <signal name="clicked" handler="on_btn111_clicked"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="btn112">
+                <property name="css-classes">btn11</property>
+                <property name="halign">start</property>
+                <property name="label">btn112</property>
+                <property name="tooltip-text">tooltip btn112</property>
+                <signal name="clicked" handler="on_btn112_clicked"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="btn113">
+                <property name="css-classes">btn11</property>
+                <property name="halign">start</property>
+                <property name="label">btn113</property>
+                <property name="tooltip-text">tooltip btn113</property>
+                <signal name="clicked" handler="on_btn113_clicked"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="btn114">
+                <property name="css-classes">btn11</property>
+                <property name="halign">start</property>
+                <property name="label">btn114</property>
+                <property name="tooltip-text">tooltip btn114</property>
+                <signal name="clicked" handler="on_btn114_clicked"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="btn115">
+                <property name="css-classes">btn11</property>
+                <property name="halign">start</property>
+                <property name="label">btn115</property>
+                <property name="tooltip-text">tooltip btn115</property>
+                <signal name="clicked" handler="on_btn115_clicked"/>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox" id="box12">
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkLabel" id="label1">
+                <property name="label" translatable="yes">Platzhalter</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox" id="box122">
+                <child>
+                  <object class="GtkTextView" id="textview1">
+                    <property name="pixels_above_lines">2</property>
+                    <property name="pixels_below_lines">3</property>
+                    <property name="pixels_inside_wrap">3</property>
+                    <property name="left_margin">22</property>
+                    <property name="right_margin">22</property>
+                    <property name="indent">14</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="plus">
+                    <property name="label" translatable="yes"> + </property>
+                    <signal name="clicked" handler="on_plus_clicked" swapped="no"/>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTextView" id="textview2">
+                    <property name="pixels_above_lines">2</property>
+                    <property name="pixels_below_lines">3</property>
+                    <property name="pixels_inside_wrap">3</property>
+                    <property name="left_margin">22</property>
+                    <property name="right_margin">22</property>
+                    <property name="indent">14</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="labelistgleich">
+                    <property name="label" translatable="yes"> = </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTextView" id="textview3">
+                    <property name="pixels_above_lines">2</property>
+                    <property name="pixels_below_lines">3</property>
+                    <property name="pixels_inside_wrap">3</property>
+                    <property name="left_margin">22</property>
+                    <property name="right_margin">22</property>
+                    <property name="indent">14</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
