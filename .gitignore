@@ -1,5 +1,6 @@
 out/*
 gtk4bash
+gitcommit.template
 # Compiled Object files
 *.slo
 *.lo
