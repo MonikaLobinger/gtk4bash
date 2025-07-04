@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.96.1 -->
+<interface>
+  <!-- interface-name bb.ui -->
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkApplicationWindow" id="win1">
+    <property name="default-height">300</property>
+    <property name="default-width">400</property>
+    <property name="show-menubar">True</property>
+    <signal name="destroy" handler="on_win1_destroy"/>
+    <child>
+      <object class="GtkBox" id="box1">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkImage" id="img1">
+            <property name="file">UI/bild.jpg</property>
+            <property name="halign">start</property>
+            <property name="icon-size">large</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkTextView" id="txt1">
+            <property name="indent">11</property>
+            <property name="input-hints">emoji|private|uppercase-chars</property>
+            <property name="name">txtt</property>
+            <property name="overflow">visible</property>
+            <property name="overwrite">True</property>
+            <property name="pixels-above-lines">28</property>
+            <property name="pixels-below-lines">31</property>
+            <signal name="insert-at-cursor" handler="on_txt1_insert-at-cursor"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="btn1">
+            <property name="label">Knapffff</property>
+            <signal name="clicked" handler="on_btn1_clicked"/>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
