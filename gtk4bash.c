@@ -278,11 +278,6 @@ void wrap_add_signals(char *filename, _args* pargs){
 static void app_startup(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "START app_startup...\n");
     _args *pargs = (_args *)user_data;
-    if(DEBUG) fprintf(stderr, "END  app_startup...\n");
-  }
-static void app_do(GtkApplication *app, gpointer *user_data) {
-    if(DEBUG) fprintf(stderr, "START app_do...\n");
-    _args *pargs = (_args *)user_data;
     GtkWidget *win; // GtkDialog deprecated with GTK4.10, use GtkWindow
     GdkDisplay *display;
 
@@ -305,9 +300,16 @@ static void app_do(GtkApplication *app, gpointer *user_data) {
     g_signal_connect (win, "destroy", G_CALLBACK (before_destroy), provider);
     g_object_unref (provider);
 
+    if(DEBUG) fprintf(stderr, "END  app_startup...\n");
+  }
+static void app_do(GtkApplication *app, gpointer *user_data) {
+    if(DEBUG) fprintf(stderr, "START app_do...\n");
+    _args *pargs = (_args *)user_data;
+    GtkWidget *win;
+    win = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->win_id));
     gtk_window_present(GTK_WINDOW(win));
     RUNNING = 1;
-    if(pargs->fpipeout)
+    if(pargs->fpipeout && !pargs->thread)
         pthread_create(&(pargs->thread), NULL, wrap_reader_loop, pargs);
     if(DEBUG) fprintf(stderr, "END  app_do...\n");
 }

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Created with Cambalache 0.96.1 -->
 <interface>
-  <!-- interface-name aa.ui -->
+  <!-- interface-name twoway.ui -->
   <requires lib="gtk" version="4.8"/>
   <object class="GtkApplicationWindow" id="win1">
     <property name="default-height">600</property>
