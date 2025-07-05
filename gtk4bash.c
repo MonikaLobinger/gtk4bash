@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <libintl.h>
 
-#define APP_ID "daheim.oskopia.gtk4bash"
+#define APP_ID "com.github.MonikaLobinger.gtk4bash"
 #define STRING_SIZE 128
 #define OBJECT_TAG "<object class=\""
 #define SIGNAL_TAG "<signal name=\""
@@ -273,20 +273,35 @@ void wrap_add_signals(char *filename, _args* pargs){
 
     fclose(file); 
   }
+static void app_startup(GtkApplication *app, gpointer *user_data) {
+    if(DEBUG) fprintf(stderr, "START app_startup...\n");
+    _args *pargs = (_args *)user_data;
+    if(DEBUG) fprintf(stderr, "END app_startup...\n");
+  }
 static void app_do(GtkApplication *app, gpointer *user_data) {
+    if(DEBUG) fprintf(stderr, "START app_do...\n");
     _args *pargs = (_args *)user_data;
     GtkWidget *win; // GtkDialog deprecated with GTK4.10, use GtkWindow
+    GdkDisplay *display;
 
     pargs->builder = gtk_builder_new();
     gtk_builder_add_from_file(pargs->builder, pargs->ui_file, NULL);
     win = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->win_id));
     gtk_window_set_application(GTK_WINDOW(win), GTK_APPLICATION(app));
-
     wrap_add_signals(pargs->ui_file, pargs);
+
+    display = gdk_display_get_default ();
+    GtkCssProvider *provider = gtk_css_provider_new ();
+    gtk_css_provider_load_from_data (provider, "textview {padding: 1px; font-family: monospace; font-size: 12pt;}", -1);
+    gtk_style_context_add_provider_for_display (display, GTK_STYLE_PROVIDER (provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    //g_signal_connect (win, "destroy", G_CALLBACK (before_destroy), provider);
+    g_object_unref (provider);
+
     gtk_window_present(GTK_WINDOW(win));
     RUNNING = 1;
     if(pargs->fpipeout)
         pthread_create(&(pargs->thread), NULL, wrap_reader_loop, pargs);
+    if(DEBUG) fprintf(stderr, "END app_do...\n");
 }
 static void app_activate(GtkApplication *app, gpointer user_data) {
     /* Dieser Funktion endet mit dem Anzeigen des Dialogs. 
@@ -396,6 +411,7 @@ int main(int argc, char **argv) {
     if(VERBOSE) for(idx=0; idx < argc; idx++)printf("%i: %s\n", idx, argv[idx]);
     if(VERBOSE) printf("UI-Datei: %s; TOP-WINDOW: %s\n", args.ui_file, args.win_id);
     app = gtk_application_new(APP_ID, G_APPLICATION_HANDLES_OPEN);
+    g_signal_connect (app, "startup", G_CALLBACK (app_startup), &args);
     g_signal_connect(app, "activate", G_CALLBACK (app_activate), &args);
     g_signal_connect(app, "open", G_CALLBACK (app_open), &args);
     g_signal_connect(app, "shutdown", G_CALLBACK (app_end), &args);

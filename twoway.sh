@@ -1,5 +1,5 @@
 #!/bin/bash
-UI="UI/aa.ui"
+UI="UI/twoway.ui"
 ID="win1"
 IN="/tmp/${0}.${$}.in"
 OUT="/tmp/${0}.${$}.out"

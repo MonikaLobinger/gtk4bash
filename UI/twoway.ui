@@ -103,11 +103,11 @@
                 <child>
                   <object class="GtkTextView" id="textview3">
                     <property name="pixels_above_lines">2</property>
-                    <property name="pixels_below_lines">3</property>
+                    <property name="pixels_below_lines">2</property>
                     <property name="pixels_inside_wrap">3</property>
-                    <property name="left_margin">22</property>
-                    <property name="right_margin">22</property>
-                    <property name="indent">14</property>
+                    <property name="left_margin">2</property>
+                    <property name="right_margin">42</property>
+                    <property name="indent">4</property>
                   </object>
                 </child>
               </object>

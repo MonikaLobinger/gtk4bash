@@ -1,5 +1,5 @@
 #!/bin/bash
-cmd="gtk4bash $@ -f UI/bb.ui -m win1"
+cmd="gtk4bash $@ -f UI/oneway.ui -m win1"
 on_btn1_clicked(){
     echo "==============on_btn1_clicked======================"
 }
