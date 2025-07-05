@@ -32,9 +32,6 @@ on_btn114_clicked(){
 on_btn115_clicked(){
     echo "==============on_btn115_clicked======================"
 }
-on_win1_destroy() {
-    echo "==============on_win1_destroy======================"
-}
 G_ENABLE_DIAGNOSTIC=1;$WRAP | while read line
 do
     echo "LINE: $line"

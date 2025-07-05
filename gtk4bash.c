@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <libintl.h>
 
+static void before_destroy (GtkWidget *, GtkCssProvider *);
+
 #define APP_ID "com.github.MonikaLobinger.gtk4bash"
 #define STRING_SIZE 128
 #define OBJECT_TAG "<object class=\""
@@ -276,7 +278,7 @@ void wrap_add_signals(char *filename, _args* pargs){
 static void app_startup(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "START app_startup...\n");
     _args *pargs = (_args *)user_data;
-    if(DEBUG) fprintf(stderr, "END app_startup...\n");
+    if(DEBUG) fprintf(stderr, "END  app_startup...\n");
   }
 static void app_do(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "START app_do...\n");
@@ -292,16 +294,22 @@ static void app_do(GtkApplication *app, gpointer *user_data) {
 
     display = gdk_display_get_default ();
     GtkCssProvider *provider = gtk_css_provider_new ();
+    // gtk_css_provider_load_from_data deprecated since 4.12
+      // Then gtk_css_provider_load_from_string has to be used
     gtk_css_provider_load_from_data (provider, "textview {padding: 1px; font-family: monospace; font-size: 12pt;}", -1);
+    gtk_css_provider_load_from_data (provider, "button {background-color: yellow;}", -1);
+    // GtkStyleContext deprecated since 4.10, but not
+      // gtk_style_context_add_provider_for_display and
+      // gtk_style_context_remove_provider_for_display
     gtk_style_context_add_provider_for_display (display, GTK_STYLE_PROVIDER (provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    //g_signal_connect (win, "destroy", G_CALLBACK (before_destroy), provider);
+    g_signal_connect (win, "destroy", G_CALLBACK (before_destroy), provider);
     g_object_unref (provider);
 
     gtk_window_present(GTK_WINDOW(win));
     RUNNING = 1;
     if(pargs->fpipeout)
         pthread_create(&(pargs->thread), NULL, wrap_reader_loop, pargs);
-    if(DEBUG) fprintf(stderr, "END app_do...\n");
+    if(DEBUG) fprintf(stderr, "END  app_do...\n");
 }
 static void app_activate(GtkApplication *app, gpointer user_data) {
     /* Dieser Funktion endet mit dem Anzeigen des Dialogs. 
@@ -313,6 +321,14 @@ static void app_open(GtkApplication *app, GFile ** files, gint n_files, gchar *h
      * Danach befinden wir uns in g_application_run */
     app_do(app, user_data);
   }
+static void before_destroy (GtkWidget *win, GtkCssProvider *provider) {
+    if(DEBUG) fprintf(stderr, "START before_destroy...\n");
+    // Wenn die Applikation beendet wird, werden provider automatisch
+    // entfernt. Dieser Code ist hier ist nicht unbedingt nötig.
+    GdkDisplay *display = gdk_display_get_default ();
+    gtk_style_context_remove_provider_for_display (display, GTK_STYLE_PROVIDER (provider));
+    if(DEBUG) fprintf(stderr, "END  before_destroy...\n");
+}
 static void app_end(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "START app_end...\n");
     RUNNING = 0;

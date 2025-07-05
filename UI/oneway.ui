@@ -2,7 +2,10 @@
 <!-- Created with Cambalache 0.96.1 -->
 <interface>
   <!-- interface-name bb.ui -->
-  <requires lib="gtk" version="4.0"/>
+  <requires lib="gtk" version="4.8"/>
+
+
+
   <object class="GtkApplicationWindow" id="win1">
     <property name="default-height">300</property>
     <property name="default-width">400</property>

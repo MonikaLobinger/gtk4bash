@@ -2,7 +2,7 @@
 <!-- Created with Cambalache 0.96.1 -->
 <interface>
   <!-- interface-name aa.ui -->
-  <requires lib="gtk" version="4.0"/>
+  <requires lib="gtk" version="4.8"/>
   <object class="GtkApplicationWindow" id="win1">
     <property name="default-height">600</property>
     <property name="default-width">500</property>
