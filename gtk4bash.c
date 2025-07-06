@@ -37,7 +37,6 @@ typedef struct {
     int         depth;
     const char *id;
     GtkWidget  *wid;
-
 } _args;
 
 void cbk_wrap_signal_handler(gpointer user_data, GObject *object){
