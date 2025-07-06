@@ -8,4 +8,15 @@ Gtk4bash ist ein Tool um einen GTK4 Dialog mit Bash zu steuern. Das Projekt [gtk
 Das Projekt besteht im wesentlichen aus einer C Datei und einem Makefile. Die GTK4 Entwicklungsbibliotheken müssen installiert sein. Dann erzeugt make eine ausführbare Datei. 
 
 # 3. Verwendung
-Die mit make erzeugte ausführbare Datei gtk4bash kann mit den beiden Scripten oneway.sh und twoway.sh getestet werden. 
+Die mit make erzeugte ausführbare Datei gtk4bash kann mit den Scripten getestet werden. 
+# 3.1 Proof of Concept
+# 3.1.1 Oneway
+oneway.sh
+![](oneway.png)
+# 3.1.2 Twoway
+twoway.sh
+![](twoway.png)
+# 3.1.3 Loadstyle
+loadstyle.sh
+![](loadstyle.png)
+# 3.2 Systematisch Adwaita
