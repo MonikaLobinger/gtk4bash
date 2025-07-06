@@ -20,4 +20,4 @@ twoway.sh
 loadstyle.sh
 ![](loadstyle.png)
 # 3.2 Systematisch Adwaita
-Mit dem Script dlg.sh können alle Dialoge in BPR getestet werden.
+Mit dem Script dlg.sh können die Dialoge in BPR getestet werden.
