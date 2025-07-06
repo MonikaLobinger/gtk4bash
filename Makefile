@@ -3,8 +3,8 @@ CC=gcc
 CFLAGS=-c -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED
 LFLAGS=-g -ggdb -Wall -Wl,--export-dynamic -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED 
 
-INCLUDES=`pkg-config --cflags gtk4`
-LIBS=`pkg-config --libs gtk4` -lexpat
+INCLUDES=`pkg-config --cflags gtk4` `pkg-config --cflags libadwaita-1`
+LIBS=`pkg-config --libs gtk4`  `pkg-config --libs libadwaita-1` -lexpat
 
 all: gtk4bash
 

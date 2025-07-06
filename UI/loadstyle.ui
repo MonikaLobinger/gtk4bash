@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkApplicationWindow" id="window">
+    <property name="default-height">300</property>
+    <property name="default-width">400</property>
+    <property name="show-menubar">true</property>
+    <signal name="destroy" handler="on_win1_destroy"/>
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">1</property>
+        <property name="halign">3</property>
+        <property name="name">myBox</property>
+        <child>
+          <object class="GtkButton" id="button1">
+            <property name="name">myButton</property>
+            <property name="label" translatable="yes">Style per id</property>
+            <property name="margin-bottom">12</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="button2">
+            <property name="label" translatable="yes">Vorgabe Stil</property>
+            <property name="margin-bottom">12</property>
+            <style>
+              <class name="destructive-action"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="button3">
+            <property name="label" translatable="yes">Eigener Stil</property>
+            <property name="margin-bottom">12</property>
+            <style>
+              <class name="blau"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLinkButton">
+            <property name="label" translatable="yes">API Reference</property>
+            <property name="uri">https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.6/class.AboutDialog.html</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

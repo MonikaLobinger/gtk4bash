@@ -1,6 +1,5 @@
 #!/bin/bash
-blueprint-compiler compile UI/test.blp > UI/test.ui
-cmd="gtk4bash $@ -f UI/test.ui -s UI/test.css -m window"
+cmd="gtk4bash $@ -f UI/loadstyle.ui -s UI/loadstyle.css -m window"
 on_btn1_clicked(){
     echo "==============on_btn1_clicked======================"
 }

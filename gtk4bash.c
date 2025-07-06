@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <pthread.h>
 #include <gtk/gtk.h>
+#include <adwaita.h>
 #include <unistd.h>
 #include <libintl.h>
 #include <expat.h>
@@ -350,6 +351,7 @@ static void app_startup(GtkApplication *app, gpointer *user_data) {
     _args *pargs = (_args *)user_data;
     GtkWidget *win = NULL; // GtkDialog deprecated with GTK4.10, use GtkWindow
 
+    adw_init();
     pargs->builder = gtk_builder_new();
     gtk_builder_add_from_file(pargs->builder, pargs->ui_file, NULL);
     win = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->win_id));

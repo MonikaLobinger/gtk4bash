@@ -1,7 +1,7 @@
 out/*
 gtk4bash
 gitcommit.template
-test.ui
+BLP/*.ui
 # Compiled Object files
 *.slo
 *.lo
