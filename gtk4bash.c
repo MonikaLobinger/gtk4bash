@@ -8,6 +8,7 @@
 #include <gtk/gtk.h>
 #include <unistd.h>
 #include <libintl.h>
+#include <expat.h>
 
 static void before_destroy (GtkWidget *, GtkCssProvider *);
 
@@ -17,6 +18,7 @@ static void before_destroy (GtkWidget *, GtkCssProvider *);
 #define SIGNAL_TAG "<signal name=\""
 #define ID_TAG "\" id=\""
 #define HANDLER_TAG "\" handler=\""
+#define MAXCHARS 1000000
 
 short DEBUG   = 0;
 short VERBOSE = 0;
@@ -25,12 +27,17 @@ short RUNNING = 0;
 typedef struct {
     char       *app_name;
     char       *ui_file;
+    char       *css_file;
     char       *win_id;
     GtkBuilder *builder;
     char*      *SIGNALS;
     char       *fpipeout;
     char       *fpipein;
     pthread_t   thread;
+    int         depth;
+    const char *id;
+    GtkWidget  *wid;
+
 } _args;
 
 void cbk_wrap_signal_handler(gpointer user_data, GObject *object){
@@ -275,31 +282,80 @@ void wrap_add_signals(char *filename, _args* pargs){
 
     fclose(file); 
   }
+static void add_styles(_args* pargs) {
+    void start(void *user_data, const char *ele, const char **attr){
+        _args *pargs = (_args*)user_data;
+        int             i;
+        if(0 == strncmp(ele,"object",6)) {
+            pargs->id="";
+            pargs->wid=NULL;
+            for (i = 0; attr[i]; i += 2) {
+                if(0 == strcmp(attr[i],"id")) {
+                    pargs->id=attr[i+1];
+                    pargs->wid = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->id));
+                    break;
+                }
+            }
+        } else if(0 == strncmp(ele,"style",5)) {
+            ;
+        } else if(0 == strncmp(ele,"class",5)) {
+            if(pargs->wid != NULL)
+                gtk_widget_add_css_class(pargs->wid,attr[1]);
+        }
+        pargs->depth++;
+    }
+    void end(void *user_data, const char *ele) {
+        _args *pargs = (_args*)user_data;
+        pargs->depth--;
+    }
+    char           *filename;
+    FILE           *fp;
+    size_t          size;
+    char           *filecontent;
+    XML_Parser      parser;
+
+    filename = pargs->ui_file;
+    parser = XML_ParserCreate(NULL);
+    if (parser == NULL) {
+        fprintf(stderr, "Kein Parser; Css Klassen nicht angebunden\n");
+    } else {
+        XML_SetUserData(parser, pargs);
+        XML_SetElementHandler(parser, start, end);
+        fp = fopen(filename, "r");
+        filecontent = malloc(MAXCHARS);
+        size = fread(filecontent, sizeof(char), MAXCHARS, fp);
+        if (XML_Parse(parser, filecontent, strlen(filecontent), XML_TRUE) == XML_STATUS_ERROR)
+            fprintf(stderr, "Fehler in %s; Css Klassen nicht angebunden\n", filename);
+        fclose(fp);
+        XML_ParserFree(parser);
+    }
+  }
+static void add_css(_args *pargs, GtkWidget *win) {
+    GdkDisplay *display;
+    GtkCssProvider *provider;
+    if(pargs->css_file == NULL) 
+        return;
+    if(DEBUG) fprintf(stderr, "Adding css file %s...\n", pargs->css_file);
+    display = gdk_display_get_default ();
+    provider = gtk_css_provider_new ();
+    gtk_css_provider_load_from_path(provider, pargs->css_file);
+    gtk_style_context_add_provider_for_display (display, 
+                                GTK_STYLE_PROVIDER (provider), 
+                                GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    add_styles(pargs);
+    g_signal_connect (win, "destroy", G_CALLBACK (before_destroy), provider);
+    g_object_unref (provider);
+  }
 static void app_startup(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "START app_startup...\n");
     _args *pargs = (_args *)user_data;
-    GtkWidget *win; // GtkDialog deprecated with GTK4.10, use GtkWindow
-    GdkDisplay *display;
+    GtkWidget *win = NULL; // GtkDialog deprecated with GTK4.10, use GtkWindow
 
     pargs->builder = gtk_builder_new();
     gtk_builder_add_from_file(pargs->builder, pargs->ui_file, NULL);
     win = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->win_id));
     gtk_window_set_application(GTK_WINDOW(win), GTK_APPLICATION(app));
     wrap_add_signals(pargs->ui_file, pargs);
-
-    display = gdk_display_get_default ();
-    GtkCssProvider *provider = gtk_css_provider_new ();
-    // gtk_css_provider_load_from_data deprecated since 4.12
-      // Then gtk_css_provider_load_from_string has to be used
-    gtk_css_provider_load_from_data (provider, "textview {padding: 1px; font-family: monospace; font-size: 12pt;}", -1);
-    gtk_css_provider_load_from_data (provider, "button {background-color: yellow;}", -1);
-    // GtkStyleContext deprecated since 4.10, but not
-      // gtk_style_context_add_provider_for_display and
-      // gtk_style_context_remove_provider_for_display
-    gtk_style_context_add_provider_for_display (display, GTK_STYLE_PROVIDER (provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    g_signal_connect (win, "destroy", G_CALLBACK (before_destroy), provider);
-    g_object_unref (provider);
-
     if(DEBUG) fprintf(stderr, "END  app_startup...\n");
   }
 static void app_do(GtkApplication *app, gpointer *user_data) {
@@ -311,6 +367,7 @@ static void app_do(GtkApplication *app, gpointer *user_data) {
     RUNNING = 1;
     if(pargs->fpipeout && !pargs->thread)
         pthread_create(&(pargs->thread), NULL, wrap_reader_loop, pargs);
+    add_css(pargs, win);
     if(DEBUG) fprintf(stderr, "END  app_do...\n");
 }
 static void app_activate(GtkApplication *app, gpointer user_data) {
@@ -340,6 +397,7 @@ static void help(char *appname){
     Aufruf:\n\
     %s -f string [-m string][-o string][-i string][-d][-v]\n\
     -f DLGFILE\t\t Die Dialogdatei\n\
+    -s CSSFILE\t\t Stil Datei. Vorgabe ist \"styles.css\".\n\
     -m OBJECTNAME \t OBJECTNAME fürs main window. Vorgabe ist \"window1\".\n\
     -o OUTPIPE\t\t z.B. \"/tmp/${0}.${$}.out\", dann auch -i nötig\n\
     -i INPIPE\t\t z.B. \"/tmp/${0}.${$}.in\", dann auch -o nötig\n\
@@ -358,7 +416,7 @@ static void read_opts(_args *pargs, int *pargc, char*** pargv) {
     argc = *pargc;
     argv = *pargv;
 
-    while((opt = getopt(argc, argv, ":dvhf:m:o:i:")) != -1) { 
+    while((opt = getopt(argc, argv, ":dvhf:s:m:o:i:")) != -1) { 
         switch(opt) { 
             case 'd': 
                 DEBUG = 1;
@@ -376,6 +434,11 @@ static void read_opts(_args *pargs, int *pargc, char*** pargv) {
                 if(VERBOSE) printf("-%c: %s\n", opt, optarg);
                 if(optarg[0]=='-') printf("ACHTUNG: -%c: %s\n", opt, optarg);
                 pargs->ui_file  = optarg;
+                break; 
+            case 's': 
+                if(VERBOSE) printf("-%c: %s\n", opt, optarg);
+                if(optarg[0]=='-') printf("ACHTUNG: -%c: %s\n", opt, optarg);
+                pargs->css_file  = optarg;
                 break; 
             case 'm': 
                 if(VERBOSE) printf("-%c: %s\n", opt, optarg);
@@ -414,12 +477,20 @@ int main(int argc, char **argv) {
 
     args.app_name  = argv[0];
     args.ui_file   = NULL;
+    if (access("styles.css", F_OK) == 0) {    
+        args.css_file  = "styles.css";
+    } else {
+        args.css_file  = NULL;
+    }
     args.win_id    = "window1";
     args.builder   = NULL;
     args.SIGNALS   = NULL;
     args.fpipeout  = NULL;
     args.fpipein   = NULL;
     args.thread    = 0;
+    args.depth     = 0;
+    args.id        = NULL;
+    args.wid       = NULL;
 
     read_opts(&args, &argc, &argv);
     if(!args.ui_file) 
@@ -428,6 +499,7 @@ int main(int argc, char **argv) {
         help(args.app_name);
     if(VERBOSE) for(idx=0; idx < argc; idx++)printf("%i: %s\n", idx, argv[idx]);
     if(VERBOSE) printf("UI-Datei: %s; TOP-WINDOW: %s\n", args.ui_file, args.win_id);
+
     app = gtk_application_new(APP_ID, G_APPLICATION_HANDLES_OPEN);
     g_signal_connect (app, "startup", G_CALLBACK (app_startup), &args);
     g_signal_connect(app, "activate", G_CALLBACK (app_activate), &args);

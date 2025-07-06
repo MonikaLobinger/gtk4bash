@@ -4,7 +4,7 @@ CFLAGS=-c -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED
 LFLAGS=-g -ggdb -Wall -Wl,--export-dynamic -DGDK_DISABLE_DEPRECATED -DGTK_DISABLE_DEPRECATED 
 
 INCLUDES=`pkg-config --cflags gtk4`
-LIBS=`pkg-config --libs gtk4`
+LIBS=`pkg-config --libs gtk4` -lexpat
 
 all: gtk4bash
 

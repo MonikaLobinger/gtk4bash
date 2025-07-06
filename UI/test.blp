@@ -1,0 +1,40 @@
+using Gtk 4.0;
+
+ApplicationWindow window {
+  default-height: 300;
+  default-width: 400;
+  show-menubar: true;
+  destroy => $on_win1_destroy();
+
+ Box {
+    orientation: vertical;
+    halign: center;
+    name: "myBox";
+
+    Button button1 {
+      name: "myButton";
+      label: _("Style per id");
+      margin-bottom: 12;
+    }
+
+    Button button2 {
+      label: _("Style per class");
+      margin-bottom: 12;
+
+      styles [ "destructive-action"
+      ]
+    }
+
+    Button button3 {
+      label: _("Style per Code");
+      margin-bottom: 12;
+    }
+
+
+
+    LinkButton {
+      label: _("API Reference");
+      uri: "https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.6/class.AboutDialog.html";
+    }
+  }
+  }

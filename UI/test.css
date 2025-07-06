@@ -1,0 +1,19 @@
+#myBox {
+    border-width: 2px;
+    border-style: solid;
+    border-color: black;
+}
+#myButton {
+    background-image: none;
+    border-width: 2px;
+    border-style: dashed;
+    border-color: cyan;
+    background-color: cyan;
+}
+.blau {
+    background-image: none;
+    border-left-width: 20px;
+    border-left-style: solid;
+    border-left-color: blue;
+    background-color: blue;
+}
