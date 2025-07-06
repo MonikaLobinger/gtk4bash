@@ -1,3 +1,3 @@
-TAG: fix; 1  1  0
-TAG: fix; 1  1  1
-TAGGING: tag -a "v1.1.1" -m "Version 1.1.1"
+TAG: feat!; 1  1  0
+TAG: feat!; 2  0  0
+TAGGING: git tag -a "v2.0.0" -m "Version 2.0.0"

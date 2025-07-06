@@ -1,5 +1,6 @@
 out/*
 gtk4bash
+debug.txt
 gitcommit.template
 BLP/*.ui
 # Compiled Object files
