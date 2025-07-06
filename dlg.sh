@@ -9,7 +9,7 @@ dir=""
 cmd="gtk4bash -s $dir/$blank_name.css -m window $@";echo $cmd
 # << 'BLP2UI-OUTCOMMENTED'
     #cp $dir/$blank_name.ui $dir/$blank_name.sv._$(date +"%y_%m_%d-%H-%M-%S")
-    blp-compiler compile $dir/$blank_name.blp > $dir/$blank_name.ui
+    blueprint-compiler compile $dir/$blank_name.blp > $dir/$blank_name.ui
     linenr=`sed -n '/AdwStatusPage/=' $dir/$blank_name.ui`
     if [[ $linenr == "9" ]]; then
         sed -i '/AdwStatusPage/i \
