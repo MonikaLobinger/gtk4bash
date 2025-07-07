@@ -89,7 +89,7 @@ void *wrap_reader_loop(void* user_data){
 
     char input[1024]; 
     char *operanda = NULL;
-    char *object = NULL;
+    char *widget_id = NULL;
     char *command = NULL;
 
 
@@ -99,7 +99,7 @@ void *wrap_reader_loop(void* user_data){
         if(!RUNNING)
             break; 
 
-        object = input;
+        widget_id = input;
         command = input;
         operanda = input;
 
@@ -114,9 +114,9 @@ void *wrap_reader_loop(void* user_data){
         *operanda++ = '\0';
 
         if(VERBOSE)
-            fprintf(stderr, "Command:> %s %s %s\n", object, command, operanda);
+            fprintf(stderr, "Command:> %s %s %s\n", widget_id, command, operanda);
   
-        GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object(pargs->builder, object));
+        GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object(pargs->builder, widget_id));
         
  
         //window set title
@@ -133,7 +133,6 @@ void *wrap_reader_loop(void* user_data){
         if(!strcmp(command, "hide")){
             gtk_widget_hide(widget);
         } else
-
 
         //textview set text
         if(!strcmp(command, "set_textview_text")){
@@ -212,7 +211,14 @@ void *wrap_reader_loop(void* user_data){
             else
                 fprintf(fileout, "0\n");
             fflush(fileout);
+        } else
+
+        if(!strcmp(command, "gtk_editable_get_text")){
+            const char* mtext=gtk_editable_get_text(GTK_EDITABLE(widget));
+            fprintf(fileout, "%s\n", mtext);  
+            fflush(fileout);
         }
+        
 
     }
 
@@ -333,7 +339,7 @@ static void add_styles(_args* pargs) {
 static void add_css(_args *pargs, GtkWidget *win) {
     GdkDisplay *display;
     GtkCssProvider *provider;
-    if(pargs->css_file == NULL) 
+    if(pargs->css_file == NULL || access(pargs->css_file, F_OK) != 0) 
         return;
     if(DEBUG) fprintf(stderr, "Adding css file %s...\n", pargs->css_file);
     display = gdk_display_get_default ();

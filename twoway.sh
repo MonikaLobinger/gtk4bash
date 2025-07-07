@@ -14,7 +14,6 @@ on_plus_clicked(){
     read b < $OUT
     let "c = $a + $b"
     echo "textview3 set_textview_text $c"
-
 } > $IN
 
 on_btn111_clicked(){

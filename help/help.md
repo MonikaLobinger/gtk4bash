@@ -12,9 +12,9 @@ Der [Blueprint Compiler](https://gitlab.gnome.org/GNOME/blueprint-compiler) erle
 # 1.1.3 Expat
 Zum Parsen der UI Datei verwende ich [expat](https://github.com/libexpat/libexpat.github.io).
 # 1.1.4 GTK4 Workbench
-[Workbench](https://github.com/workbenchdev/Workbench) ist sehr hilfreich um sich in GTK4 hineinzuarbeiten. Für die Verwendung von gtk4wrap ist es nicht nötig.
-# 1.1.5 LibAdwaita
-[LibAdwaite](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/index.html) ist für Dialoge im Verzeichnis BLP nötig.
+[Workbench](https://github.com/workbenchdev/Workbench) ist sehr hilfreich um sich in GTK4 hineinzuarbeiten. Aus ihm habe ich Dialoge ins Verzeichnis BLP kopiert. Für die Verwendung von gtk4wrap ist das Programm nicht nötig.
+# 1.1.5 Adwaita
+Adwaita muß installiert sein, es  ist für Dialoge im Verzeichnis BLP nötig. [LibAdwaita](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/index.html) muß nur installiert sein, wenn man gtk4bash erstellen will.
 # 2. Installation
 Das Projekt besteht im wesentlichen aus einer C Datei und einem Makefile. Die GTK4 Entwicklungsbibliotheken müssen installiert sein. Dann erzeugt make eine ausführbare Datei. 
 
@@ -32,5 +32,7 @@ loadstyle.sh
 ![](loadstyle.png)
 # 3.2 Systematisch Adwaita
 Mit dem Script dlg.sh können die Dialoge in BPR getestet werden.
+
+# 3.2.1 about
 dlg.sh -f BLP/about.ui
 ![](about.png)

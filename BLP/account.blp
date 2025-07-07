@@ -17,7 +17,7 @@ Adw.StatusPage {
         margin-bottom: 30;
         spacing: 18;
 
-        Adw.EntryRow entry {
+        Adw.EntryRow account_entry {
           title: _("Reason");
 
           styles [
@@ -27,10 +27,10 @@ Adw.StatusPage {
           halign: fill;
         }
 
-        Button button {
+        Button account_request_button {
           label: _("Request");
           halign: center;
-          clicked => $on_button_clicked();
+          clicked => $on_account_request_button_clicked();
 
           styles [
             "suggested-action",

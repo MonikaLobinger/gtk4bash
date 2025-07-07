@@ -6,7 +6,7 @@ LFLAGS=-g -ggdb -Wall -Wl,--export-dynamic -DGDK_DISABLE_DEPRECATED -DGTK_DISABL
 INCLUDES=`pkg-config --cflags gtk4` `pkg-config --cflags libadwaita-1`
 LIBS=`pkg-config --libs gtk4`  `pkg-config --libs libadwaita-1` -lexpat
 
-all: gtk4bash
+build: gtk4bash
 
 gtk4bash : out/gtk4bash.o
 	${CC} ${LFLAGS} -o gtk4bash out/gtk4bash.o ${LIBS}
