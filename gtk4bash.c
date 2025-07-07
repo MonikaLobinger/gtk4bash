@@ -352,6 +352,18 @@ static void add_css(_args *pargs, GtkWidget *win) {
     g_signal_connect (win, "destroy", G_CALLBACK (before_destroy), provider);
     g_object_unref (provider);
   }
+
+static void app_query_end(GtkApplication *app, gpointer *user_data) { }
+static void app_window_added(GtkApplication *app, GtkWindow *win, gpointer *user_data) { }
+static void app_window_removed(GtkApplication *app, GtkWindow *win, gpointer *user_data) { }
+static void app_command_line(GtkApplication *app, GApplicationCommandLine *cmd_line, gpointer *user_data) { }
+static void app_handle_local_options(GtkApplication *app, GVariantDict *options, gpointer *user_data) { }
+static void app_name_lost(GtkApplication *app, gpointer *user_data) { }
+static void app_notify(GtkApplication *app, GParamSpec *pspec, gpointer *user_data) { }
+static void app_action_added(GtkApplication *app, gchar* action_name, gpointer *user_data) { }
+static void app_action_enabled_changed(GtkApplication *app, gchar* action_name, gboolean enabled, gpointer *user_data) { }
+static void app_action_removed(GtkApplication *app, gchar* action_name, gpointer *user_data) { }
+static void app_action_state_changed(GtkApplication *app, gchar* action_name, GVariant* value, gpointer *user_data) { }
 static void app_startup(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "START app_startup...\n");
     _args *pargs = (_args *)user_data;
@@ -395,7 +407,7 @@ static void before_destroy (GtkWidget *win, GtkCssProvider *provider) {
     gtk_style_context_remove_provider_for_display (display, GTK_STYLE_PROVIDER (provider));
     if(DEBUG) fprintf(stderr, "END  before_destroy...\n");
 }
-static void app_end(GtkApplication *app, gpointer *user_data) {
+static void app_shutdown(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "START app_end...\n");
     RUNNING = 0;
   }
@@ -508,10 +520,24 @@ int main(int argc, char **argv) {
     if(VERBOSE) printf("UI-Datei: %s; TOP-WINDOW: %s\n", args.ui_file, args.win_id);
 
     app = gtk_application_new(APP_ID, G_APPLICATION_HANDLES_OPEN);
-    g_signal_connect (app, "startup", G_CALLBACK (app_startup), &args);
+    // Empty handlers, perhabs to be used later
+    g_object_set(app, "register-session", TRUE, NULL);
+    g_signal_connect(app, "query-end", G_CALLBACK (app_query_end), &args);
+    g_signal_connect(app, "window-added", G_CALLBACK (app_window_added), &args);
+    g_signal_connect(app, "window-removed", G_CALLBACK (app_window_removed), &args);
+    g_signal_connect(app, "command-line", G_CALLBACK (app_command_line), &args);
+    g_signal_connect(app, "handle-local-options", G_CALLBACK (app_handle_local_options), &args);
+    g_signal_connect(app, "name-lost", G_CALLBACK (app_name_lost), &args);
+    g_signal_connect(app, "notify", G_CALLBACK (app_notify), &args);
+    g_signal_connect(app, "action-added", G_CALLBACK (app_action_added), &args);
+    g_signal_connect(app, "action-enabled-changed", G_CALLBACK (app_action_enabled_changed), &args);
+    g_signal_connect(app, "action-removed", G_CALLBACK (app_action_removed), &args);
+    g_signal_connect(app, "action-state-changed", G_CALLBACK (app_action_state_changed), &args);
+    // Used handlers
+    g_signal_connect(app, "startup", G_CALLBACK (app_startup), &args);
     g_signal_connect(app, "activate", G_CALLBACK (app_activate), &args);
     g_signal_connect(app, "open", G_CALLBACK (app_open), &args);
-    g_signal_connect(app, "shutdown", G_CALLBACK (app_end), &args);
+    g_signal_connect(app, "shutdown", G_CALLBACK (app_shutdown), &args);
     stat = g_application_run(G_APPLICATION(app), argc, argv);
     if(DEBUG) fprintf(stderr, "ENDE App läuft nicht mehr...\n");
     wrap_cleanup(&args);
