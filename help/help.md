@@ -16,7 +16,7 @@ Zum Parsen der UI Datei verwende ich [expat](https://github.com/libexpat/libexpa
 # 1.1.5 Adwaita
 Adwaita muß installiert sein, es  ist für Dialoge im Verzeichnis BLP nötig. [LibAdwaita](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/index.html) muß nur installiert sein, wenn man gtk4bash erstellen will.
 # 2. Installation
-Das Projekt besteht im wesentlichen aus einer C Datei und einem Makefile. Die GTK4 Entwicklungsbibliotheken müssen installiert sein. Dann erzeugt make eine ausführbare Datei. 
+Das Projekt besteht im wesentlichen aus einer C Datei und einem Makefile. Die GTK4 Entwicklungsbibliotheken müssen installiert sein. Es wird wenigstens GTK4.8 benötigt. Dann erzeugt make eine ausführbare Datei. 
 
 # 3. Verwendung
 Die mit make erzeugte ausführbare Datei gtk4bash kann mit den Scripten getestet werden. 

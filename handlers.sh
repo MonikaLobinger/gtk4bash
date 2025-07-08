@@ -11,15 +11,19 @@ on_button_gtk_window_get_default_icon_name_clicked(){
     val=
     echo "gtk_window_get_default_icon_name"
     read val < $OUT
-    echo "set_label_text result  $val"
+    echo " set_label_text  result  $val"
+} > $IN
+
+on_button_gtk_window_set_auto_startup_notification_clicked() {
+    echo "gtk_window_set_auto_startup_notification 1"
 } > $IN
 
 on_button_gtk_window_get_set_title_clicked(){
     val=
-    echo "gtk_window_get_title win1"
+    echo "|gtk_window_get_title|win1"
     read val < $OUT
-    echo "set_label_text result $val"
-    echo "gtk_window_set_title win1 Neuer Titel"
+    echo "|set_label_text|result|$val"
+    echo "|gtk_window_set_title|win1|Neuer Titel"
 } > $IN
 
 on_button_gtk_window_close_clicked(){

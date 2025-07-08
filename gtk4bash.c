@@ -59,7 +59,7 @@ static void appwin_unmap(GtkApplicationWindow *appwin, _args *pargs);
 static void appwin_unrealize(GtkApplicationWindow *appwin, _args *pargs);
 static void appwin_notify(GtkApplicationWindow *appwin, GParamSpec * pspec, _args *pargs);
 
-void cbk_wrap_signal_handler(gpointer user_data, GObject *object){
+void cbk_wrap_signal_handler(gpointer user_data, GObject *object) {
     char *signal = (char *)user_data;
     fprintf(stdout, "%s\n", signal);
     fflush(stdout);
@@ -84,12 +84,12 @@ static void wrap_cleanup(_args* pargs) {
     pargs->fpipein=NULL;
     pargs->thread=0;
   }
-void *wrap_reader_loop(void* user_data){
+void *wrap_reader_loop(void* user_data) {
     if(DEBUG) fprintf(stderr, "START wrap_reader_loop...\n");
     _args *pargs = (_args *)user_data;
     mkfifo(pargs->fpipeout, S_IRWXU);
     FILE *fileout = fopen(pargs->fpipeout, "a+");
-    if(!fileout){
+    if(!fileout) {
         fprintf(stderr, "Error opening pipe %s !\n", pargs->fpipeout);
         pthread_exit(NULL);
     }
@@ -97,7 +97,7 @@ void *wrap_reader_loop(void* user_data){
 
     mkfifo(pargs->fpipein, S_IRWXU);
     FILE *filein = fopen(pargs->fpipein, "r+");    
-    if(!filein){
+    if(!filein) {
         fprintf(stderr, "Error opening pipe %s !\n", pargs->fpipein);
         pthread_exit(NULL);
     }
@@ -107,118 +107,297 @@ void *wrap_reader_loop(void* user_data){
 
 
     char input[1024]; 
-    char *operanda = NULL;
-    char *widget_id = NULL;
+    char strend = ' ';
     char *command = NULL;
+    char *widget_id = NULL;
+    char *operanda = NULL;
+    char *operandb = NULL;
+    void *vu;
 
+    void trim(char *s) {
+        size_t len = strspn(s, " ");
+        if (len > 0) memmove(s, s + len, strlen(s) - len + 1);
+    }
 
-    while(RUNNING){
+    typedef struct {char* name; void* fup; } FU;
+    typedef struct {int size; FU* fus;} FUS;
+    FUS* new_function_table() {
+        FUS* t = malloc(sizeof(FUS));t->size = 0;t->fus = NULL;return t;
+    }
+    void free_function_table(FUS* t) {
+        for(int i = 0; i < t->size; i++)free((t->fus + i)->name);
+        free(t->fus); free(t);
+    }
+    void add_function(FUS* t, char* name, void* fup) {
+        if(!t->size) t->fus=malloc(sizeof(FU));
+        else t->fus=realloc(t->fus, sizeof(FU)*(t->size+1));
+        (t->fus + t->size)->name = malloc(strlen(name) + 1);
+        strcpy((t->fus + t->size)->name, name);
+        (t->fus + t->size)->fup = fup;
+        t->size++;
+    }
+    void* get_function(FUS* t, char* name) {
+        for (int i = 0; i < t->size; i++)
+            if (strcmp((t->fus + i)->name, name)==0)return(t->fus + i)->fup;
+        return NULL;
+    }
+    FUS* table_constcharP=new_function_table();                      // const char* void
+    typedef const char*(*sig_constcharP)();          
+    FUS* table_GListModelP=new_function_table();                     // GListModel* void
+    typedef GListModel*(*sig_GListModelP)();         
+    FUS* table_GListP=new_function_table();                          // GList* void
+    typedef GList*(*sig_GListP)();                   
+    FUS* table_void_gboolean=new_function_table();                   // void gboolean
+    typedef void(*sig_void_gboolean)(gboolean);      
+    FUS* table_void_constcharP=new_function_table();                 // void const char * 
+    typedef void(*sig_void_constcharP)(const char*); 
+    FUS* table_void_GtkWindowP=new_function_table();                 // void GtkWindow*
+    typedef void(*sig_void_GtkWindowP)(GtkWindow*);  
+    FUS* table_void_GtkWindowP_GdkMonitorP=new_function_table();     // void GtkWindow* GdkMonitor*
+    typedef void(*sig_void_GtkWindowP_GdkMonitorP)(GtkWindow*, GdkMonitor*);  
+    FUS* table_GtkApplication_GtkWindowP=new_function_table();       // GtkApplication* GtkWindow*
+    typedef GtkApplication*(*sig_GtkApplication_GtkWindowP)(GtkWindow*);  
+    FUS* table_GtkWidgetP_GtkWindowP=new_function_table();           // GtkWidget* GtkWindow*
+    typedef GtkWidget*(*sig_GtkWidgetP_GtkWindowP)(GtkWindow*);  
+    FUS* table_gboolean_GtkWindowP=new_function_table();             // gboolean GtkWindow*
+    typedef gboolean(*sig_gboolean_GtkWindowP)(GtkWindow*);  
+    FUS* table_void_GtkWindowP_intP_intP=new_function_table();            // void GtkWindow* int* int*
+    typedef void(*sig_void_GtkWindowP_intP_intP)(GtkWindow*, int*, int*);  
+    #if GTK_MINOR_VERSION >= 20
+      FUS* table_GtkWindowGravity_GtkWindowP=new_function_table();     // GtkWindowGravity GtkWindow*
+      typedef GtkWindowGravity (*sig_GtkWindowGravity_GtkWindowP)(GtkWindow*);
+    #endif
+    FUS* table_GtkWindowGroupP_GtkWindowP=new_function_table();      // GtkWindowGroup* GtkWindow*
+    typedef GtkWindowGroup (*sig_GtkWindowGroupP_GtkWindowP)(GtkWindow*);
+    FUS* table_constcharP_GtkWindowP=new_function_table();           // const char* GtkWindow*
+    typedef const char* (*sig_constcharP_GtkWindowP)(GtkWindow*);
+    FUS* table_GtkWindowP_GtkWindowP=new_function_table();           // GtkWindow* GtkWindow*
+    typedef GtkWindow* (*sig_GtkWindowP_GtkWindowP)(GtkWindow*);
+    FUS* table_void_GtkWindowP_guint32=new_function_table();         // void GtkWindow* guint32
+    typedef void (*sig_void_GtkWindowP_guint32)(GtkWindow*, guint32);
+    FUS* table_void_GtkWindowP_GtkApplicationP=new_function_table(); // void GtkWindow* GtkApplication*
+    typedef void (*sig_void_GtkWindowP_GtkApplicationP)(GtkWindow*, GtkApplication*);
+    FUS* table_void_GtkWindowP_GtkWidgetP=new_function_table();      // void GtkWindow* GtkWidget*
+    typedef void (*sig_void_GtkWindowP_GtkWidgetP)(GtkWindow*,GtkWidget);
+    FUS* table_void_GtkWindowP_gboolean=new_function_table();        // void GtkWindow* gboolean
+    typedef void (*sig_void_GtkWindowP_gboolean)(GtkWindow*, gboolean);
+    FUS* table_void_GtkWindowP_int_int=new_function_table();         // void GtkWindow* int int
+    typedef void (*sig_void_GtkWindowP_int_int)(GtkWindow*, int, int);
+    FUS* table_void_GtkWindowP_GdkDisplayP=new_function_table();     // void GtkWindow* GdkDisplay*
+    typedef void (*sig_void_GtkWindowP_GdkDisplayP)(GtkWindow*, GdkDisplay*);
+    #if GTK_MINOR_VERSION >= 20
+      FUS* table_void_GtkWindowP_GtkWindowGravity=new_function_table();// void GtkWindow* GtkWindowGravity
+      typedef void (*sig_void_GtkWindowP_GtkWindowGravity)(GtkWindow*, GtkWindowGravity);
+    #endif
+    FUS* table_void_GtkWindowP_constcharP=new_function_table();      // void GtkWindow* const char*
+    typedef void (*sig_void_GtkWindowP_constcharP)(GtkWindow*, const char *);
+    FUS* table_void_GtkWindowP_GtkWindowP=new_function_table();      // void GtkWindow* GtkWindow*
+
+    /* GtkWindow **********************************************************/
+    /* Functions */
+    add_function(table_constcharP,"gtk_window_get_default_icon_name",gtk_window_get_default_icon_name); // const char* void
+    /*table_GListModelP*/ /*gtk_window_get_toplevels*/ // GListModel* void
+    /*table_GListP*/ /*gtk_window_list_toplevels*/ // GList* void
+    add_function(table_void_gboolean,"gtk_window_set_auto_startup_notification",gtk_window_set_auto_startup_notification); // void gboolean
+    add_function(table_void_constcharP,"gtk_window_set_default_icon_name",gtk_window_set_default_icon_name); // void const char *
+    add_function(table_void_gboolean,"gtk_window_set_interactive_debugging",gtk_window_set_interactive_debugging); // void gboolean
+    /* Instance methods */
+    add_function(table_void_GtkWindowP,"gtk_window_close",gtk_window_close); // void GtkWindow*
+    add_function(table_void_GtkWindowP,"gtk_window_destroy", gtk_window_destroy); // void GtkWindow*
+    add_function(table_void_GtkWindowP,"gtk_window_fullscreen", gtk_window_fullscreen); // void GtkWindow*
+    /*table_void_GtkWindowP_GdkMonitorP*/ /*gtk_window_fullscreen_on_monitor*/ // void GtkWindow* GdkMonitor*
+    /*table_GtkApplication_GtkWindowP*/ /*gtk_window_get_application*/ // GtkApplication* GtkWindow*
+    /*table_GtkWidgetP_GtkWindowP*/ /*gtk_window_get_child*/ // GtkWidget* GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_get_decorated",gtk_window_get_decorated); // gboolean GtkWindow*
+    add_function(table_void_GtkWindowP_intP_intP,"gtk_window_get_default_size",gtk_window_get_default_size); // void GtkWindow* int* int*
+    /*table_GtkWidgetP_GtkWindowP*/ /*gtk_window_get_default_widget*/ // GtkWidget* GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_get_deletable",gtk_window_get_deletable); // gboolean GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_get_destroy_with_parent",gtk_window_get_destroy_with_parent); // gboolean GtkWindow*
+    /*table_GtkWidgetP_GtkWindowP*/ /*gtk_window_get_focus*/ // GtkWidget* GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_get_focus_visible",gtk_window_get_focus_visible); // gboolean GtkWindow*
+    #if GTK_MINOR_VERSION >= 20
+      add_function(table_GtkWindowGravity_GtkWindowP,"gtk_window_get_gravity",gtk_window_get_gravity); // GtkWindowGravity GtkWindow*
+    #endif
+    /*table_GtkWindowGroupP_GtkWindowP*/ /*gtk_window_get_group*/ // GtkWindowGroup* GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_get_handle_menubar_accel",gtk_window_get_handle_menubar_accel); // gboolean GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_get_hide_on_close",gtk_window_get_hide_on_close); // gboolean GtkWindow*
+    add_function(table_constcharP_GtkWindowP,"gtk_window_get_icon_name",gtk_window_get_icon_name); // const char* GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_get_mnemonics_visible",gtk_window_get_mnemonics_visible); // gboolean GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_get_modal",gtk_window_get_modal); // gboolean GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_get_resizable",gtk_window_get_resizable); // gboolean GtkWindow*
+    add_function(table_constcharP_GtkWindowP,"gtk_window_get_title",gtk_window_get_title); // const char* GtkWindow*
+    /*table_GtkWidgetP_GtkWindowP*/ /*gtk_window_get_titlebar*/ // GtkWidget* GtkWindow*
+    /*table_GtkWindowP_GtkWindowP*/ /*gtk_window_get_transient_for*/ // GtkWindow* GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_has_group",gtk_window_has_group); // gboolean GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_is_active",gtk_window_is_active); // gboolean GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_is_fullscreen",gtk_window_is_fullscreen); // gboolean GtkWindow*
+    add_function(table_gboolean_GtkWindowP,"gtk_window_is_maximized",gtk_window_is_maximized); // gboolean GtkWindow*
+    #if GTK_MINOR_VERSION >= 12
+      add_function(table_gboolean_GtkWindowP,"gtk_window_is_suspended",gtk_window_is_suspended); // gboolean GtkWindow*
+    #endif
+    add_function(table_void_GtkWindowP,"gtk_window_maximize", gtk_window_maximize); // void GtkWindow*
+    add_function(table_void_GtkWindowP,"gtk_window_minimize", gtk_window_minimize); // void GtkWindow*
+    add_function(table_void_GtkWindowP,"gtk_window_present", gtk_window_present); // void GtkWindow*
+    #if GTK_MINOR_VERSION < 14
+      add_function(table_void_GtkWindowP_guint32,"gtk_window_present_with_time",gtk_window_present_with_time); // void GtkWindow* guint32
+    #endif
+    /*table_void_GtkWindowP_GtkApplicationP*/ /*gtk_window_set_application*/ // void GtkWindow* GtkApplication*
+    /*table_void_GtkWindowP_GtkWidgetP*/ /*gtk_window_set_child*/ // void GtkWindow* GtkWidget*
+    add_function(table_void_GtkWindowP_gboolean,"gtk_window_set_decorated",gtk_window_set_decorated); // void GtkWindow* gboolean
+    add_function(table_void_GtkWindowP_int_int,"gtk_window_set_default_size",gtk_window_set_default_size); // void GtkWindow* int int
+    /*table_void_GtkWindowP_GtkWidgetP*/ /*gtk_window_set_default_widget*/ // void GtkWindow* GtkWidget*
+    add_function(table_void_GtkWindowP_gboolean,"gtk_window_set_deletable",gtk_window_set_deletable); // void GtkWindow* gboolean
+    add_function(table_void_GtkWindowP_gboolean,"gtk_window_set_destroy_with_parent",gtk_window_set_destroy_with_parent); // void GtkWindow* gboolean
+    /*table_void_GtkWindowP_GdkDisplayP*/ /*gtk_window_set_display*/ // void GtkWindow* GdkDisplay*
+    /*table_void_GtkWindowP_GtkWidgetP*/ /*gtk_window_set_focus*/ // void GtkWindow* GtkWidget*
+    add_function(table_void_GtkWindowP_gboolean,"gtk_window_set_focus_visible",gtk_window_set_focus_visible); // void GtkWindow* gboolean
+    #if GTK_MINOR_VERSION >= 20
+      add_function(table_void_GtkWindowP_GtkWindowGravity,"gtk_window_set_gravity",gtk_window_set_gravity); // void GtkWindow* GtkWindowGravity
+    #endif
+    add_function(table_void_GtkWindowP_gboolean,"gtk_window_set_handle_menubar_accel",gtk_window_set_handle_menubar_accel); // void GtkWindow* gboolean
+    add_function(table_void_GtkWindowP_gboolean,"gtk_window_set_hide_on_close",gtk_window_set_hide_on_close); // void GtkWindow* gboolean
+    add_function(table_void_GtkWindowP_constcharP,"gtk_window_set_icon_name",gtk_window_set_icon_name); // void GtkWindow* const char*
+    add_function(table_void_GtkWindowP_gboolean,"gtk_window_set_mnemonics_visible",gtk_window_set_mnemonics_visible); // void GtkWindow* gboolean
+    add_function(table_void_GtkWindowP_gboolean,"gtk_window_set_modal",gtk_window_set_modal); // void GtkWindow* gboolean
+    add_function(table_void_GtkWindowP_gboolean,"gtk_window_set_resizable",gtk_window_set_resizable); // void GtkWindow* gboolean
+    add_function(table_void_GtkWindowP_constcharP,"gtk_window_set_startup_id",gtk_window_set_startup_id); // void GtkWindow* const char*
+    add_function(table_void_GtkWindowP_constcharP,"gtk_window_set_title",gtk_window_set_title); // void GtkWindow* const char*
+    /*table_void_GtkWindowP_GtkWidgetP*/ /*gtk_window_set_titlebar*/ // void GtkWindow* GtkWidget*
+    /*table_void_GtkWindowP_GtkWindowP*/ /*gtk_window_set_transient_for*/ // void GtkWindow* GtkWindow*
+    add_function(table_void_GtkWindowP,"gtk_window_unfullscreen", gtk_window_unfullscreen); // void GtkWindow*
+    add_function(table_void_GtkWindowP,"gtk_window_unmaximize", gtk_window_unmaximize); // void GtkWindow*
+    add_function(table_void_GtkWindowP,"gtk_window_unminimize", gtk_window_unminimize); // void GtkWindow*
+    /* Virtual methods */
+    // void activate_default (GtkWindow* window)
+    // void activate_focus (GtkWindow* window)
+    // gboolean close_request (GtkWindow* window)
+    // gboolean enable_debugging (GtkWindow* window, gboolean toggle)
+    // void keys_changed (GtkWindow* window)
+
+    while(RUNNING) {
         fgets(input, 1024, filein);
-
-        if(!RUNNING)
-            break; 
-
+        if(!RUNNING) break; 
         input[strlen(input)-1]='\0';
         command = input;
-        widget_id = strchr(command, ' ');
-        if(widget_id != NULL) {
-           *widget_id++ = '\0';
-            operanda = strchr(widget_id, ' ');
-        } else {
-            operanda = NULL;
+        if(command[0]=='|') {strend='|';command++;} else strend=' ';
+        trim(command);
+        widget_id = strchr(command, strend);
+        if(widget_id != NULL) { *widget_id++ = '\0';trim(widget_id); operanda = strchr(widget_id, strend);
+        } else { operanda = NULL; }
+        if(operanda != NULL) {*operanda++ = '\0';trim(operanda); operandb = strchr(operanda, strend);
+        } else { operandb = NULL; }
+        if(operandb != NULL) {*operandb++ = '\0';trim(operandb);}
+        if(get_function(table_void_gboolean, command) || get_function(table_void_constcharP, command)) {
+            operanda = widget_id;
+            widget_id = NULL;
         }
-        if(operanda != NULL) {
-            *operanda++ = '\0';
-        }
-
-        if(VERBOSE)
-            fprintf(stderr, "Command:> %s %s %s\n", 
-                command, 
-                widget_id == NULL ? "NULL" : widget_id, 
-                operanda == NULL ? "NULL" : operanda);
-  
+        if(VERBOSE) fprintf(stderr, "CALLBACK:> %s %s %s %s\n", command, widget_id == NULL ? "NULL" : widget_id, operanda == NULL ? "NULL" : operanda, operandb == NULL ? "NULL" : operandb);
         GtkWidget *widget = widget_id == NULL ? NULL : GTK_WIDGET(gtk_builder_get_object(pargs->builder, widget_id));
-        
 
-        if(!strcmp(command, "gtk_window_get_default_icon_name")){
-            const gchar* value=gtk_window_get_default_icon_name();
+        if(NULL != (vu=get_function(table_constcharP,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK01 %s",command);
+            const char* value = ((sig_constcharP)vu)();
+            if(VERBOSE) fprintf(stderr," %s\n",value);
             fprintf(fileout, "%s\n", value);
             fflush(fileout);
         } else
-
-        #ifdef ISNOTUSEFULL        
-        if(!strcmp(command, "gtk_window_get_toplevels")){
-            const char* value;
-            GtkWindow *window;
-            GtkWidget *widget;
-            GListModel* values=gtk_window_get_toplevels();
-            int cnt = g_list_model_get_n_items(values);
-            for(;cnt-- > 0;cnt) {
-                widget=(GtkWidget *)g_list_model_get_object(values, cnt);
-                value=gtk_widget_get_name(widget);
-            }
-            fprintf(fileout, "%s\n", value);
+        if(NULL != (vu=get_function(table_GListModelP,command))) {} else
+        if(NULL != (vu=get_function(table_GListP,command))) {} else
+        if(NULL != (vu=get_function(table_void_gboolean,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK02 %s, argument: %s\n",command,operanda);
+            gboolean b = (int) strtol(operanda, (char **)NULL, 10) == 0 ? FALSE : TRUE;
+            ((sig_void_gboolean)vu)(b);
+        } else
+        if(NULL != (vu=get_function(table_void_constcharP,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK03 %s, argument: %s\n",command,operanda);
+            ((sig_void_constcharP)vu)(operanda);
+        } else
+        if(NULL != (vu=get_function(table_void_GtkWindowP,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK04 %s, widget_id: %s\n",command,widget_id);
+            ((sig_void_GtkWindowP)vu)(GTK_WINDOW(widget));
+        } else
+        if(NULL != (vu=get_function(table_void_GtkWindowP_GdkMonitorP,command))) { } else
+        if(NULL != (vu=get_function(table_GtkApplication_GtkWindowP,command))) { } else
+        if(NULL != (vu=get_function(table_GtkWidgetP_GtkWindowP,command))) { } else
+        if(NULL != (vu=get_function(table_gboolean_GtkWindowP,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK05 %s, widget_id: %s\n",command,widget_id);
+            gboolean b = ((sig_gboolean_GtkWindowP)vu)(GTK_WINDOW(widget));
+            fprintf(fileout, "%i\n", b);
             fflush(fileout);
         } else
+        if(NULL != (vu=get_function(table_void_GtkWindowP_intP_intP,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK06 %s, widget_id: %s\n",command,widget_id);
+            int x, y;
+            ((sig_void_GtkWindowP_intP_intP)vu)(GTK_WINDOW(widget),&x, &y);
+            fprintf(fileout, "%i\n", x);
+            fprintf(fileout, "%i\n", y);
+            fflush(fileout);
+        } else
+        #if GTK_MINOR_VERSION >= 20
+          if(NULL != (vu=get_function(table_GtkWindowGravity_GtkWindowP,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK07 %s, widget_id: %s\n",command,widget_id);
+            GtkWindowGravity g = ((sig_GtkWindowGravity_GtkWindowP)vu)(GTK_WINDOW(widget));
+            fprintf(fileout, "%i\n", g);
+            fflush(fileout);
+          } else
         #endif
-        
-        if(!strcmp(command, "gtk_window_get_title")){
-            const char * value = gtk_window_get_title(GTK_WINDOW(widget));
+        if(NULL != (vu=get_function(table_GtkWindowGroupP_GtkWindowP,command))) { } else
+        if(NULL != (vu=get_function(table_constcharP_GtkWindowP,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK08 %s, widget_id: %s\n",command,widget_id);
+            const char*value = ((sig_constcharP_GtkWindowP)vu)(GTK_WINDOW(widget));
             fprintf(fileout, "%s\n", value);
             fflush(fileout);
         } else
-        if(!strcmp(command, "gtk_window_set_title")){
-            gtk_window_set_title(GTK_WINDOW(widget), operanda);
+        if(NULL != (vu=get_function(table_GtkWindowP_GtkWindowP,command))) { } else
+        if(NULL != (vu=get_function(table_void_GtkWindowP_guint32,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK09 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+            guint32 i = (int) strtol(operanda, (char **)NULL, 10);
+            ((sig_void_GtkWindowP_guint32)vu)(GTK_WINDOW(widget),i);
         } else
-        if(!strcmp(command, "gtk_window_close")){
-            gtk_window_close(GTK_WINDOW(widget));
+        if(NULL != (vu=get_function(table_void_GtkWindowP_GtkApplicationP,command))) { } else
+        if(NULL != (vu=get_function(table_void_GtkWindowP_GtkWidgetP,command))) { } else
+        if(NULL != (vu=get_function(table_void_GtkWindowP_gboolean,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK10 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+            gboolean b = (int) strtol(operanda, (char **)NULL, 10) == 0 ? FALSE : TRUE;
+            ((sig_void_GtkWindowP_gboolean)vu)(GTK_WINDOW(widget),b);
         } else
-        if(!strcmp(command, "gtk_window_fullscreen")){
-            gtk_window_fullscreen(GTK_WINDOW(widget));
+        if(NULL != (vu=get_function(table_void_GtkWindowP_int_int,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK11 %s, widget_id: %s, argument1: %s, argument2: %s\n",command,widget_id,operanda, operandb);
+            int x = (int) strtol(operanda, (char **)NULL, 10);
+            int y = (int) strtol(operandb, (char **)NULL, 10);
+            ((sig_void_GtkWindowP_int_int)vu)(GTK_WINDOW(widget),x,y);
         } else
-        if(!strcmp(command, "gtk_window_maximize")){
-            gtk_window_maximize(GTK_WINDOW(widget));
+        if(NULL != (vu=get_function(table_void_GtkWindowP_GdkDisplayP,command))) { } else
+        #if GTK_MINOR_VERSION >= 20
+          if(NULL != (vu=get_function(table_void_GtkWindowP_GtkWindowGravity,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK12 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+            GtkWindowGravity g = (int) strtol(operanda, (char **)NULL, 10);
+            ((sig_void_GtkWindowP_GtkWindowGravity)vu)(GTK_WINDOW(widget),g);
+          } else
+        #endif
+        if(NULL != (vu=get_function(table_void_GtkWindowP_constcharP,command))) {
+            if(VERBOSE) fprintf(stderr,"CALLBACK13 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+            ((sig_void_GtkWindowP_constcharP)vu)(GTK_WINDOW(widget),operanda);
         } else
-        if(!strcmp(command, "gtk_window_minimize")){
-            gtk_window_minimize(GTK_WINDOW(widget));
-        } else
-        if(!strcmp(command, "gtk_window_unfullscreen")){
-            gtk_window_unfullscreen(GTK_WINDOW(widget));
-        } else
-        if(!strcmp(command, "gtk_window_unmaximize")){
-            gtk_window_unmaximize(GTK_WINDOW(widget));
-        } else
-        if(!strcmp(command, "gtk_window_unminimize")){
-            gtk_window_unminimize(GTK_WINDOW(widget));
-        } else
-        if(!strcmp(command, "gtk_window_is_fullscreen")){
-            gboolean answer = gtk_window_is_fullscreen(GTK_WINDOW(widget));
-            fprintf(fileout, "%i\n", answer);
-            fflush(fileout);
-        } else
-        if(!strcmp(command, "gtk_window_is_maximized")){
-            gboolean answer = gtk_window_is_maximized(GTK_WINDOW(widget));
-            fprintf(fileout, "%i\n", answer);
-            fflush(fileout);
-        } else
-        
+        if(NULL != (vu=get_function(table_void_GtkWindowP_GtkWindowP,command))) { } else
+       
         //window show
-        if(!strcmp(command, "show")){
+        if(!strcmp(command, "show")) {
             gtk_widget_show(widget);
         } else
         
         //window hide
-        if(!strcmp(command, "hide")){
+        if(!strcmp(command, "hide")) {
             gtk_widget_hide(widget);
         } else
 
         //textview set text
-        if(!strcmp(command, "set_textview_text")){
+        if(!strcmp(command, "set_textview_text")) {
             gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), operanda, -1); 
         } else
 
         //textview get text 
-        if(!strcmp(command, "get_textview_text")){
+        if(!strcmp(command, "get_textview_text")) {
             GtkTextIter a, b;
             GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)); 
             gtk_text_buffer_get_iter_at_offset(buffer, &a, 0);
@@ -230,60 +409,60 @@ void *wrap_reader_loop(void* user_data){
         //
 
         //spinner activate/deactivate
-        if(!strcmp(command, "spinner_start")){
+        if(!strcmp(command, "spinner_start")) {
             gtk_spinner_start(GTK_SPINNER(widget)); 
         } else
 
-        if(!strcmp(command, "spinner_stop")){
+        if(!strcmp(command, "spinner_stop")) {
             gtk_spinner_stop(GTK_SPINNER(widget)); 
         } else
 
         //label set/get
-        if(!strcmp(command, "set_label_text")){
+        if(!strcmp(command, "set_label_text")) {
             gtk_label_set_text(GTK_LABEL(widget), operanda);
         } else
 
         //set button label
-        if(!strcmp(command, "set_button_label")){
+        if(!strcmp(command, "set_button_label")) {
             gtk_button_set_label(GTK_BUTTON(widget), operanda);
         } else
 
         //entrytext set/get
-        if(!strcmp(command, "get_entry_text")){
+        if(!strcmp(command, "get_entry_text")) {
             gchar* mtext = gtk_editable_get_chars(GTK_EDITABLE(widget), 0, -1);
             fprintf(fileout, "%s\n", mtext);  
             fflush(fileout);
         } else
         
-        //if(!strcmp(command, "set_entry_text")){
+        //if(!strcmp(command, "set_entry_text")) {
         //    gtk_entry_set_text(GTK_ENTRY(widget), operanda);
         //} else
 
 
         //combobox add options, get/set selected 
-        if(!strcmp(command, "set_combobox_items")){
+        if(!strcmp(command, "set_combobox_items")) {
             //GtkTreeModel *tree_model;
             //gtk_combo_box_model_set(GTK_COMBO_BOX(widget), tree_model);
 
         } else
-        if(!strcmp(command, "get_selected_combobox_item")){
+        if(!strcmp(command, "get_selected_combobox_item")) {
             fprintf(fileout, "%d\n", gtk_combo_box_get_active(GTK_COMBO_BOX(widget)));  
             fflush(fileout);
         } else
 
         //image set image TODO doesn't work
-        if(!strcmp(command, "set_image")){
+        if(!strcmp(command, "set_image")) {
             gtk_image_set_from_file(GTK_IMAGE(widget), operanda);
             gtk_widget_show(widget);
         } else
 
         //progressbar set, show/hide
-        if(!strcmp(command, "set_progressbar")){
+        if(!strcmp(command, "set_progressbar")) {
 
         } else
 
         //togglebutton istoggled //toggle, check, radio button 
-        if(!strcmp(command, "get_button_state")){
+        if(!strcmp(command, "get_button_state")) {
             if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
                 fprintf(fileout, "1\n");
             else
@@ -291,7 +470,7 @@ void *wrap_reader_loop(void* user_data){
             fflush(fileout);
         } else
 
-        if(!strcmp(command, "gtk_editable_get_text")){
+        if(!strcmp(command, "gtk_editable_get_text")) {
             const char* mtext=gtk_editable_get_text(GTK_EDITABLE(widget));
             fprintf(fileout, "%s\n", mtext);  
             fflush(fileout);
@@ -300,12 +479,42 @@ void *wrap_reader_loop(void* user_data){
 
     }
 
+    free_function_table(table_constcharP);table_constcharP=NULL;
+    free_function_table(table_GListModelP);table_GListModelP=NULL;
+    free_function_table(table_GListP);table_GListP=NULL;
+    free_function_table(table_void_gboolean);table_void_gboolean=NULL;
+    free_function_table(table_void_constcharP);table_void_constcharP=NULL;
+    free_function_table(table_void_GtkWindowP);table_void_GtkWindowP=NULL;
+    free_function_table(table_void_GtkWindowP_GdkMonitorP);table_void_GtkWindowP_GdkMonitorP=NULL;
+    free_function_table(table_GtkApplication_GtkWindowP);table_GtkApplication_GtkWindowP=NULL;
+    free_function_table(table_GtkWidgetP_GtkWindowP);table_GtkWidgetP_GtkWindowP=NULL;
+    free_function_table(table_gboolean_GtkWindowP);table_gboolean_GtkWindowP=NULL;
+    free_function_table(table_void_GtkWindowP_intP_intP);table_void_GtkWindowP_intP_intP=NULL;
+    #if GTK_MINOR_VERSION >= 20
+      free_function_table(table_GtkWindowGravity_GtkWindowP);table_GtkWindowGravity_GtkWindowP=NULL;
+    #endif
+    free_function_table(table_GtkWindowGroupP_GtkWindowP);table_GtkWindowGroupP_GtkWindowP=NULL;
+    free_function_table(table_constcharP_GtkWindowP);table_constcharP_GtkWindowP=NULL;
+    free_function_table(table_GtkWindowP_GtkWindowP);table_GtkWindowP_GtkWindowP=NULL;
+    free_function_table(table_void_GtkWindowP_guint32);table_void_GtkWindowP_guint32=NULL;
+    free_function_table(table_void_GtkWindowP_GtkApplicationP);table_void_GtkWindowP_GtkApplicationP=NULL;
+    free_function_table(table_void_GtkWindowP_GtkWidgetP);table_void_GtkWindowP_GtkWidgetP=NULL;
+    free_function_table(table_void_GtkWindowP_gboolean);table_void_GtkWindowP_gboolean=NULL;
+    free_function_table(table_void_GtkWindowP_int_int);table_void_GtkWindowP_int_int=NULL;
+    free_function_table(table_void_GtkWindowP_GdkDisplayP);table_void_GtkWindowP_GdkDisplayP=NULL;
+    #if GTK_MINOR_VERSION >= 20
+      free_function_table(table_void_GtkWindowP_GtkWindowGravity);table_void_GtkWindowP_GtkWindowGravity=NULL;
+    #endif
+    free_function_table(table_void_GtkWindowP_constcharP);table_void_GtkWindowP_constcharP=NULL;
+    free_function_table(table_void_GtkWindowP_GtkWindowP);table_void_GtkWindowP_GtkWindowP=NULL;
+    
+
     fclose(filein);
     fflush(fileout);
     fclose(fileout);
     pthread_exit(NULL);
   }
-void wrap_add_signals(char *filename, _args* pargs){
+void wrap_add_signals(char *filename, _args* pargs) {
     if(DEBUG) fprintf(stderr, "START wrap_add_signals...\n");
     //Adding signals handled in glade file
     //TODO: make less dumb, replace by real xml parser
@@ -320,18 +529,18 @@ void wrap_add_signals(char *filename, _args* pargs){
     int hand_count = 0;
     
     pargs->SIGNALS = (char**)calloc(50, sizeof(char*));
-    if(!pargs->SIGNALS){
+    if(!pargs->SIGNALS) {
         if(VERBOSE) fprintf(stderr,  "Error allocating memory: pargs->SIGNALS!\n");
         return;
     }    
-    if(!file){
+    if(!file) {
         if(VERBOSE) fprintf(stderr,  "Couldn't open file %s, no signals will be auto-handled!\n", filename);
         return;
     }
-    while(!feof(file)){
+    while(!feof(file)) {
         fgets(line, STRING_SIZE, file);
 
-        if((a = strstr(line, OBJECT_TAG)) != NULL){
+        if((a = strstr(line, OBJECT_TAG)) != NULL) {
             a += strlen(OBJECT_TAG);  
             int i = 0;
             for (; i < STRING_SIZE - 1 && *a != '\"'; i++)
@@ -343,7 +552,7 @@ void wrap_add_signals(char *filename, _args* pargs){
             objname[i] = '\0';
             continue;        
         }            
-        if ((a = strstr(line, SIGNAL_TAG)) != NULL){
+        if ((a = strstr(line, SIGNAL_TAG)) != NULL) {
             a += strlen(SIGNAL_TAG);
             int i = 0;
             for (; i < STRING_SIZE - 1 && *a != '\"'; i++)
@@ -367,7 +576,7 @@ void wrap_add_signals(char *filename, _args* pargs){
     fclose(file); 
   }
 static void add_styles(_args* pargs) {
-    void start(void *user_data, const char *ele, const char **attr){
+    void start(void *user_data, const char *ele, const char **attr) {
         _args *pargs = (_args*)user_data;
         int             i;
         if(0 == strncmp(ele,"object",6)) {
@@ -583,7 +792,7 @@ static void app_shutdown(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER app_end...\n");
     RUNNING = 0;
   }
-static void help(char *appname){
+static void help(char *appname) {
     fprintf(stderr, "\
     Aufruf:\n\
     %s -f string [-m string][-o string][-i string][-d][-v]\n\
@@ -654,7 +863,7 @@ static void read_opts(_args *pargs, int *pargc, char*** pargv) {
                 break; 
         } 
     } 
-    for(pos=1; optind < argc; optind++){
+    for(pos=1; optind < argc; optind++) {
         if(VERBOSE) fprintf(stderr, "argv[%i]=%s\n", pos,argv[optind]); 
         argv[pos++]=argv[optind];
     }  

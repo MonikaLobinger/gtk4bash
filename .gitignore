@@ -1,6 +1,12 @@
 out/*
 gtk4bash
 debug.txt
+xx.*
+x.*
+xxx.*
+*.x
+*.xx
+*.xxx
 Version.md
 gitcommit.template
 BLP/*.ui
