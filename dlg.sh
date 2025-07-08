@@ -23,7 +23,7 @@ cmd="gtk4bash -s $dir/$blank_name.css -m $WIN_ID -i $IN -o $OUT $@";echo $cmd
         <object class=\"GtkApplicationWindow\" id=\"abcdef\">\
         <property name=\"default-height\">700</property>\
         <property name=\"default-width\">800</property>\
-        <signal name="destroy" handler="on_window_destroy"/>\
+        <signal name="destroy" handler="on_WINDOW_destroy"/>\
         <child>' $dir/$blank_name.ui
         sed -i "s/abcdef/$WIN_ID/g"  $dir/$blank_name.ui
         sed -i '/\/interface/i \ \ <\/child>\n  <\/object>' $dir/$blank_name.ui
@@ -41,12 +41,12 @@ function flatpak_get_user_information_finish {
     flatpak_result="user information"
 }
 #### General Callbacks #########################################################
-on_window_destroy() {
-    echo "==============on_window_destroy======================"
+on_WINDOW_destroy() {
+    echo "==============on_WINDOW_destroy======================"
 }
 #### about Callbacks ###########################################################
-on_button_clicked(){
-    echo "==============on_button_clicked======================"
+on_ABOUT_about_button_clicked() {
+    echo "==============on_ABOUT_about_button_clicked======================"
 }
 #### account Callbacks #########################################################
 on_information_received() {
@@ -55,9 +55,9 @@ on_information_received() {
     flatpak_get_user_information_finish result
     if (( DEBUG )); then echo "   result: $result" >> debug.txt; fi
 }
-on_account_request_button_clicked() {
-    if (( DEBUG )); then echo "FUNCTION on_account_request_button_clicked" >> debug.txt; fi
-    echo "account_entry gtk_editable_get_text reason"
+on_ACCOUNT_request_button_clicked() {
+    if (( DEBUG )); then echo "FUNCTION on_ACCOUNT_request_button_clicked" >> debug.txt; fi
+    echo "gtk_editable_get_text account_entry reason"
     read reason < $OUT
     if (( DEBUG )); then echo "    reason: $reason" >> debug.txt; fi
     flatpak_get_user_information reason on_information_received

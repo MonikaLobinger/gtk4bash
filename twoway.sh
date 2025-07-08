@@ -8,12 +8,12 @@ WRAP="gtk4bash $@ -f $UI -m $ID "
 WRAP="gtk4bash $@ -f $UI -m $ID -i $IN -o $OUT"
 
 on_plus_clicked(){
-    echo "textview1 get_textview_text a"
-    echo "textview2 get_textview_text a"
+    echo "get_textview_text textview1 a"
+    echo "get_textview_text textview2 a"
     read a < $OUT
     read b < $OUT
     let "c = $a + $b"
-    echo "textview3 set_textview_text $c"
+    echo "set_textview_text textview3 $c"
 } > $IN
 
 on_btn111_clicked(){
