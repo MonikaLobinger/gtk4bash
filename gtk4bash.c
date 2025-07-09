@@ -62,12 +62,23 @@ void cbk_wrap_signal_handler(gpointer user_data, GObject *object) {
     fflush(stdout);
   }
 static void wrap_cleanup(_args* pargs) {
-    if(DEBUG) fprintf(stderr, "START wrap_cleanup...\n");
+    if(DEBUG) fprintf(stderr, "START %s()...\n", __func__);
     RUNNING = 0;
-    if(pargs->fpipeout)
-        pthread_cancel(pargs->thread);
+    if(pargs->fpipeout) {
+        void* res;
+        if(DEBUG) fprintf(stderr, "!!!!VOR pthread_cancel ...\n");
+        int s = pthread_cancel(pargs->thread);
+        if(s != 0) fprintf(stderr, "!!!!ERROR pthread_cancel ...\n");
+
+        s = pthread_join(pargs->thread, &res);
+        if(s != 0) fprintf(stderr, "!!!!ERROR pthread_join ...\n");
+        if(res == PTHREAD_CANCELED)
+            if(DEBUG) fprintf(stderr, "%s(): thread was canceled\n", __func__);
+        else
+            fprintf(stderr, "!!!!ERROR %s(): thread wasn't canceled (shouldn't happen!)\n", __func__);
+    }
     if(VERBOSE)
-        fprintf(stderr, "Cleaning...\n");
+        fprintf(stderr, "Cleaning ...\n");
     g_object_unref(pargs->builder);
     char **tmp = pargs->SIGNALS;
     while(*tmp)
@@ -82,7 +93,7 @@ static void wrap_cleanup(_args* pargs) {
     pargs->thread=0;
   }
 void *wrap_reader_loop(void* user_data) {
-    if(DEBUG) fprintf(stderr, "START wrap_reader_loop...\n");
+    if(DEBUG) fprintf(stderr, "START %s()...\n", __func__);
     _args *pargs = (_args *)user_data;
     mkfifo(pargs->fpipeout, S_IRWXU);
     FILE *fileout = fopen(pargs->fpipeout, "a+");
@@ -509,10 +520,11 @@ void *wrap_reader_loop(void* user_data) {
     fclose(filein);
     fflush(fileout);
     fclose(fileout);
+    fprintf(stderr, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! %s() Ich dachte, da kommen wir nie hin \n", __func__);
     pthread_exit(NULL);
   }
 void wrap_add_signals(char *filename, _args* pargs) {
-    if(DEBUG) fprintf(stderr, "START wrap_add_signals...\n");
+    if(DEBUG) fprintf(stderr, "START %s()...\n", __func__);
     //Adding signals handled in glade file
     //TODO: make less dumb, replace by real xml parser
 
@@ -632,7 +644,7 @@ static void add_css(_args *pargs, GtkApplicationWindow *appwin) {
     GtkCssProvider *provider;
     if(pargs->css_file == NULL || access(pargs->css_file, F_OK) != 0) 
         return;
-    if(DEBUG) fprintf(stderr, "Adding css file %s...\n", pargs->css_file);
+    if(DEBUG) fprintf(stderr, "Adding css file %s ...\n", pargs->css_file);
     display = gdk_display_get_default ();
     provider = gtk_css_provider_new ();
     gtk_css_provider_load_from_path(provider, pargs->css_file);
@@ -644,40 +656,40 @@ static void add_css(_args *pargs, GtkApplicationWindow *appwin) {
   }
 
 static void app_query_end(GtkApplication *app, gpointer *user_data) { 
-    if(DEBUG) fprintf(stderr, "HANDLER app_query_end...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_window_added(GtkApplication *app, GtkWindow *win, gpointer *user_data) { 
-    if(DEBUG) fprintf(stderr, "HANDLER app_window_added...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_window_removed(GtkApplication *app, GtkWindow *win, gpointer *user_data) { 
-    if(DEBUG) fprintf(stderr, "HANDLER app_window_removed...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_command_line(GtkApplication *app, GApplicationCommandLine *cmd_line, gpointer *user_data) { 
-    if(DEBUG) fprintf(stderr, "HANDLER app_command_line...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_handle_local_options(GtkApplication *app, GVariantDict *options, gpointer *user_data) { 
-    if(DEBUG) fprintf(stderr, "HANDLER app_handle_local_options...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_name_lost(GtkApplication *app, gpointer *user_data) { 
-    if(DEBUG) fprintf(stderr, "HANDLER app_name_lost...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_notify(GtkApplication *app, GParamSpec *pspec, gpointer *user_data) { 
-    if(DEBUG) fprintf(stderr, "HANDLER app_notify...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_action_added(GtkApplication *app, gchar* action_name, gpointer *user_data) { 
-    if(DEBUG) fprintf(stderr, "HANDLER app_action_added...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_action_enabled_changed(GtkApplication *app, gchar* action_name, gboolean enabled, gpointer *user_data) { 
-    if(DEBUG) fprintf(stderr, "HANDLER app_action_enabled_changed...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_action_removed(GtkApplication *app, gchar* action_name, gpointer *user_data) { 
-    if(DEBUG) fprintf(stderr, "HANDLER app_action_removed...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_action_state_changed(GtkApplication *app, gchar* action_name, GVariant* value, gpointer *user_data) { 
-    if(DEBUG) fprintf(stderr, "HANDLER app_action_state_changed...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_startup(GtkApplication *app, gpointer *user_data) {
-    if(DEBUG) fprintf(stderr, "HANDLER app_startup...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
     _args *pargs = (_args *)user_data;
     GtkWidget *win = NULL; // GtkDialog deprecated with GTK4.10, use GtkWindow
 
@@ -687,10 +699,10 @@ static void app_startup(GtkApplication *app, gpointer *user_data) {
     win = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->win_id));
     gtk_window_set_application(GTK_WINDOW(win), GTK_APPLICATION(app));
     wrap_add_signals(pargs->ui_file, pargs);
-    if(DEBUG) fprintf(stderr, "END  app_startup...\n");
+    if(DEBUG) fprintf(stderr, "ENDE %s()...\n", __func__);
   }
 static void app_do(GtkApplication *app, gpointer *user_data) {
-    if(DEBUG) fprintf(stderr, "START app_do...\n");
+    if(DEBUG) fprintf(stderr, "START %s()...\n", __func__);
     _args *pargs = (_args *)user_data;
     GtkWidget *win;
     win = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->win_id));
@@ -721,77 +733,77 @@ static void app_do(GtkApplication *app, gpointer *user_data) {
     g_signal_connect (appwin, "unrealize", G_CALLBACK (appwin_unrealize), pargs);
     g_signal_connect (appwin, "notify", G_CALLBACK (appwin_notify), pargs);
   #endif
-    if(DEBUG) fprintf(stderr, "END  app_do...\n");
+    if(DEBUG) fprintf(stderr, "ENDE %s()...\n", __func__);
 }
 static void appwin_activate_default(GtkApplicationWindow *appwin, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_activate_default...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_activate_focus(GtkApplicationWindow *appwin, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_activate_focus...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static gboolean appwin_close_request(GtkApplicationWindow *appwin, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_close_request...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
     return FALSE;
   }
 static gboolean appwin_enable_debugging(GtkApplicationWindow *appwin, gboolean toggle, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_enable_debugging...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_destroy(GtkApplicationWindow *appwin, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_destroy...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_direction_changed(GtkApplicationWindow *appwin, GtkTextDirection previous_direction, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_direction_changed...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_hide(GtkApplicationWindow *appwin, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_hide...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static gboolean appwin_keynav_failed(GtkApplicationWindow *appwin, GtkDirectionType direction, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_keynav_failed...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_map(GtkApplicationWindow *appwin, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_map...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static gboolean appwin_mnemonic_activate(GtkApplicationWindow *appwin, gboolean group_cycling, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_mnemonic_activate...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_move_focus(GtkApplicationWindow *appwin, GtkDirectionType direction, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_move_focus...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static gboolean appwin_query_tooltip(GtkApplicationWindow *appwin, gint x, gint y, gboolean keyboard_mode, GtkTooltip* tooltip,_args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_query_tooltip...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_realize(GtkApplicationWindow *appwin, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_realize...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_show(GtkApplicationWindow *appwin, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_show...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_state_flags_changed(GtkApplicationWindow *appwin, GtkStateFlags flags, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_state_flags_changed...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_unmap(GtkApplicationWindow *appwin, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_unmap...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_unrealize(GtkApplicationWindow *appwin, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_unrealize...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void appwin_notify(GtkApplicationWindow *appwin, GParamSpec * pspec, _args *pargs) {
-    if(DEBUG) fprintf(stderr, "HANDLER appwin_notify...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_activate(GtkApplication *app, gpointer *user_data) {
-    if(DEBUG) fprintf(stderr, "HANDLER app_activate...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
     /* Dieser Funktion endet mit dem Anzeigen des Dialogs. 
      * Danach befinden wir uns in g_application_run */
     app_do(app, user_data);
   }
 static void app_open(GtkApplication *app, GFile ** files, gint n_files, gchar *hint, gpointer *user_data) {
-    if(DEBUG) fprintf(stderr, "HANDLER app_open...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
     /* Dieser Funktion endet mit dem Anzeigen des Dialogs. 
      * Danach befinden wir uns in g_application_run */
     app_do(app, user_data);
   }
 static void app_shutdown(GtkApplication *app, gpointer *user_data) {
-    if(DEBUG) fprintf(stderr, "HANDLER app_end...\n");
+    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
     RUNNING = 0;
   }
 static void help(char *appname) {
@@ -892,7 +904,7 @@ int main(int argc, char **argv) {
     args.thread    = 0;
 
     read_opts(&args, &argc, &argv);
-    if(DEBUG) fprintf(stderr, "MAIN:Optionen eingelesen...\n");
+    if(DEBUG) fprintf(stderr, "MAIN:Optionen eingelesen ...\n");
     if(!args.ui_file) 
         help(args.app_name);
     if((args.fpipeout && !args.fpipein) || (args.fpipein && !args.fpipeout))
@@ -901,7 +913,7 @@ int main(int argc, char **argv) {
     if(VERBOSE) fprintf(stderr, "UI-Datei: %s; TOP-WINDOW: %s\n", args.ui_file, args.win_id);
 
     app = gtk_application_new(APP_ID, G_APPLICATION_HANDLES_OPEN);
-    if(DEBUG) fprintf(stderr, "MAIN:Neue Applikation...\n");
+    if(DEBUG) fprintf(stderr, "MAIN:Neue Applikation ...\n");
   #ifdef ACTIVATE_EMPTY_HANDLERS
     // Empty handlers, perhabs to be used later
     g_object_set(app, "register-session", TRUE, NULL);
@@ -922,9 +934,9 @@ int main(int argc, char **argv) {
     g_signal_connect(app, "activate", G_CALLBACK (app_activate), &args);
     g_signal_connect(app, "open", G_CALLBACK (app_open), &args);
     g_signal_connect(app, "shutdown", G_CALLBACK (app_shutdown), &args);
-    if(DEBUG) fprintf(stderr, "MAIN:Alle Application Handler verbunden...\n");
+    if(DEBUG) fprintf(stderr, "MAIN:Alle Application Handler verbunden ...\n");
     stat = g_application_run(G_APPLICATION(app), argc, argv);
-    if(DEBUG) fprintf(stderr, "ENDE App läuft nicht mehr...\n");
+    if(DEBUG) fprintf(stderr, "ENDE App läuft nicht mehr ...\n");
     wrap_cleanup(&args);
     g_object_unref(app);
     return stat;
