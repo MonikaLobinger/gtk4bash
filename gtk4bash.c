@@ -35,11 +35,11 @@ FUS* table_new() {
     if(!first_table) first_table=t;
     if(last) last->next=t;
     last=t;
-    if(DEBUG) fprintf(stderr, "%s() !\n", __func__);
+    //if(DEBUG) fprintf(stderr, "%s() !\n", __func__);
     return t;
   }
 void table_free(FUS* t) {
-    if(DEBUG) fprintf(stderr, "%s() !\n", __func__);
+    //if(DEBUG) fprintf(stderr, "%s() !\n", __func__);
     for(int i = 0; i < t->size; i++)free((t->fus + i)->name);
     free(t->fus); free(t);
   }
@@ -69,12 +69,14 @@ typedef struct {
     char       *app_name;
     char       *ui_file;
     char       *css_file;
-    char       *fpipeout;
-    char       *fpipein;
+    char       *name_out;
+    char       *name_in;
     char       *win_id;
     GtkBuilder *builder;
     char*      *SIGNALS;
     pthread_t   thread;
+    FILE       *fpout;
+    FILE       *fpin;
 } _args;
 
 static void appwin_activate_default(GtkApplicationWindow *appwin, _args *pargs);
@@ -95,63 +97,29 @@ static void appwin_state_flags_changed(GtkApplicationWindow *appwin, GtkStateFla
 static void appwin_unmap(GtkApplicationWindow *appwin, _args *pargs);
 static void appwin_unrealize(GtkApplicationWindow *appwin, _args *pargs);
 static void appwin_notify(GtkApplicationWindow *appwin, GParamSpec * pspec, _args *pargs);
-
+//
 void cbk_wrap_signal_handler(gpointer user_data, GObject *object) {
     char *signal = (char *)user_data;
     fprintf(stdout, "%s\n", signal);
     fflush(stdout);
-  }
-static void wrap_cleanup(_args* pargs) {
-    if(DEBUG) fprintf(stderr, "START %s()...\n", __func__);
-    if(pargs->fpipeout) {
-        void* res;
-        if(DEBUG) fprintf(stderr, "!!!!VOR pthread_cancel ...\n");
-        int s = pthread_cancel(pargs->thread);
-        if(s != 0) fprintf(stderr, "!!!!ERROR pthread_cancel ...\n");
-
-        s = pthread_join(pargs->thread, &res);
-        if(s != 0) fprintf(stderr, "!!!!ERROR pthread_join ...\n");
-        if(res == PTHREAD_CANCELED)
-            if(DEBUG) fprintf(stderr, "%s(): thread was canceled\n", __func__);
-        else
-            fprintf(stderr, "!!!!ERROR %s(): thread wasn't canceled (shouldn't happen!)\n", __func__);
-    }
-    if(VERBOSE)
-        fprintf(stderr, "Cleaning ...\n");
-    g_object_unref(pargs->builder);
-    char **tmp = pargs->SIGNALS;
-    while(*tmp)
-        free(*tmp++);
-    free(pargs->SIGNALS);
-    unlink(pargs->fpipeout);
-    unlink(pargs->fpipein);
-    pargs->SIGNALS=NULL;
-    pargs->builder=NULL;
-    pargs->fpipeout=NULL;
-    pargs->fpipein=NULL;
-    pargs->thread=0;
-  }
+}
 void *wrap_reader_loop(void* user_data) {
-    if(DEBUG) fprintf(stderr, "START %s()...\n", __func__);
+    if(DEBUG) fprintf(stderr, "START %s()... - ENDE wird nie erreicht.\n", __func__);
     _args *pargs = (_args *)user_data;
-    mkfifo(pargs->fpipeout, S_IRWXU);
-    FILE *fileout = fopen(pargs->fpipeout, "a+");
-    if(!fileout) {
-        fprintf(stderr, "Error opening pipe %s !\n", pargs->fpipeout);
+    mkfifo(pargs->name_out, S_IRWXU);
+    pargs->fpout = fopen(pargs->name_out, "a+");
+    if(!pargs->fpout) {
+        fprintf(stderr, "Error opening pipe %s !\n", pargs->name_out);
+        pthread_exit(NULL);
+    }
+    mkfifo(pargs->name_in, S_IRWXU);
+    pargs->fpin = fopen(pargs->name_in, "r+");    
+    if(!pargs->fpin) {
+        fprintf(stderr, "Error opening pipe %s !\n", pargs->name_in);
         pthread_exit(NULL);
     }
 
-
-    mkfifo(pargs->fpipein, S_IRWXU);
-    FILE *filein = fopen(pargs->fpipein, "r+");    
-    if(!filein) {
-        fprintf(stderr, "Error opening pipe %s !\n", pargs->fpipein);
-        pthread_exit(NULL);
-    }
-
-    if(VERBOSE)
-        fprintf(stderr, "Using pipes out:%s in:%s\n", pargs->fpipeout, pargs->fpipein);
-
+    if(VERBOSE) fprintf(stderr, "Using pipes out:%s in:%s\n", pargs->name_out, pargs->name_in);
 
     char input[1024]; 
     char strend = ' ';
@@ -300,7 +268,7 @@ void *wrap_reader_loop(void* user_data) {
           // void keys_changed (GtkWindow* window)
     //
     while(TRUE) {
-        fgets(input, 1024, filein);
+        fgets(input, 1024, pargs->fpin);
         input[strlen(input)-1]='\0';
         command = input;
         if(command[0]=='|') {strend='|';command++;} else strend=' ';
@@ -319,74 +287,74 @@ void *wrap_reader_loop(void* user_data) {
         GtkWidget *widget = widget_id == NULL ? NULL : GTK_WIDGET(gtk_builder_get_object(pargs->builder, widget_id));
 
         if(NULL != (vu=table_get(table_constcharP,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK01 %s",command);
+            if(DEBUG) fprintf(stderr,"CALLBACK01 %s",command);
             const char* value = ((sig_constcharP)vu)();
-            if(VERBOSE) fprintf(stderr," %s\n",value);
-            fprintf(fileout, "%s\n", value);
-            fflush(fileout);
+            if(DEBUG) fprintf(stderr," %s\n",value);
+            fprintf(pargs->fpout, "%s\n", value);
+            fflush(pargs->fpout);
         } else
         if(NULL != (vu=table_get(table_GListModelP,command))) {} else
         if(NULL != (vu=table_get(table_GListP,command))) {} else
         if(NULL != (vu=table_get(table_void_gboolean,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK02 %s, argument: %s\n",command,operanda);
+            if(DEBUG) fprintf(stderr,"CALLBACK02 %s, argument: %s\n",command,operanda);
             gboolean b = (int) strtol(operanda, (char **)NULL, 10) == 0 ? FALSE : TRUE;
             ((sig_void_gboolean)vu)(b);
         } else
         if(NULL != (vu=table_get(table_void_constcharP,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK03 %s, argument: %s\n",command,operanda);
+            if(DEBUG) fprintf(stderr,"CALLBACK03 %s, argument: %s\n",command,operanda);
             ((sig_void_constcharP)vu)(operanda);
         } else
         if(NULL != (vu=table_get(table_void_GtkWindowP,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK04 %s, widget_id: %s\n",command,widget_id);
+            if(DEBUG) fprintf(stderr,"CALLBACK04 %s, widget_id: %s\n",command,widget_id);
             ((sig_void_GtkWindowP)vu)(GTK_WINDOW(widget));
         } else
         if(NULL != (vu=table_get(table_void_GtkWindowP_GdkMonitorP,command))) { } else
         if(NULL != (vu=table_get(table_GtkApplication_GtkWindowP,command))) { } else
         if(NULL != (vu=table_get(table_GtkWidgetP_GtkWindowP,command))) { } else
         if(NULL != (vu=table_get(table_gboolean_GtkWindowP,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK05 %s, widget_id: %s\n",command,widget_id);
+            if(DEBUG) fprintf(stderr,"CALLBACK05 %s, widget_id: %s\n",command,widget_id);
             gboolean b = ((sig_gboolean_GtkWindowP)vu)(GTK_WINDOW(widget));
-            fprintf(fileout, "%i\n", b);
-            fflush(fileout);
+            fprintf(pargs->fpout, "%i\n", b);
+            fflush(pargs->fpout);
         } else
         if(NULL != (vu=table_get(table_void_GtkWindowP_intP_intP,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK06 %s, widget_id: %s\n",command,widget_id);
+            if(DEBUG) fprintf(stderr,"CALLBACK06 %s, widget_id: %s\n",command,widget_id);
             int x, y;
             ((sig_void_GtkWindowP_intP_intP)vu)(GTK_WINDOW(widget),&x, &y);
-            fprintf(fileout, "%i\n", x);
-            fprintf(fileout, "%i\n", y);
-            fflush(fileout);
+            fprintf(pargs->fpout, "%i\n", x);
+            fprintf(pargs->fpout, "%i\n", y);
+            fflush(pargs->fpout);
         } else
         #if GTK_MINOR_VERSION >= 20
           if(NULL != (vu=table_get(table_GtkWindowGravity_GtkWindowP,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK07 %s, widget_id: %s\n",command,widget_id);
+            if(DEBUG) fprintf(stderr,"CALLBACK07 %s, widget_id: %s\n",command,widget_id);
             GtkWindowGravity g = ((sig_GtkWindowGravity_GtkWindowP)vu)(GTK_WINDOW(widget));
-            fprintf(fileout, "%i\n", g);
-            fflush(fileout);
+            fprintf(pargs->fpout, "%i\n", g);
+            fflush(pargs->fpout);
           } else
         #endif
         if(NULL != (vu=table_get(table_GtkWindowGroupP_GtkWindowP,command))) { } else
         if(NULL != (vu=table_get(table_constcharP_GtkWindowP,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK08 %s, widget_id: %s\n",command,widget_id);
+            if(DEBUG) fprintf(stderr,"CALLBACK08 %s, widget_id: %s\n",command,widget_id);
             const char*value = ((sig_constcharP_GtkWindowP)vu)(GTK_WINDOW(widget));
-            fprintf(fileout, "%s\n", value);
-            fflush(fileout);
+            fprintf(pargs->fpout, "%s\n", value);
+            fflush(pargs->fpout);
         } else
         if(NULL != (vu=table_get(table_GtkWindowP_GtkWindowP,command))) { } else
         if(NULL != (vu=table_get(table_void_GtkWindowP_guint32,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK09 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+            if(DEBUG) fprintf(stderr,"CALLBACK09 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
             guint32 i = (int) strtol(operanda, (char **)NULL, 10);
             ((sig_void_GtkWindowP_guint32)vu)(GTK_WINDOW(widget),i);
         } else
         if(NULL != (vu=table_get(table_void_GtkWindowP_GtkApplicationP,command))) { } else
         if(NULL != (vu=table_get(table_void_GtkWindowP_GtkWidgetP,command))) { } else
         if(NULL != (vu=table_get(table_void_GtkWindowP_gboolean,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK10 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+            if(DEBUG) fprintf(stderr,"CALLBACK10 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
             gboolean b = (int) strtol(operanda, (char **)NULL, 10) == 0 ? FALSE : TRUE;
             ((sig_void_GtkWindowP_gboolean)vu)(GTK_WINDOW(widget),b);
         } else
         if(NULL != (vu=table_get(table_void_GtkWindowP_int_int,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK11 %s, widget_id: %s, argument1: %s, argument2: %s\n",command,widget_id,operanda, operandb);
+            if(DEBUG) fprintf(stderr,"CALLBACK11 %s, widget_id: %s, argument1: %s, argument2: %s\n",command,widget_id,operanda, operandb);
             int x = (int) strtol(operanda, (char **)NULL, 10);
             int y = (int) strtol(operandb, (char **)NULL, 10);
             ((sig_void_GtkWindowP_int_int)vu)(GTK_WINDOW(widget),x,y);
@@ -394,13 +362,13 @@ void *wrap_reader_loop(void* user_data) {
         if(NULL != (vu=table_get(table_void_GtkWindowP_GdkDisplayP,command))) { } else
         #if GTK_MINOR_VERSION >= 20
           if(NULL != (vu=table_get(table_void_GtkWindowP_GtkWindowGravity,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK12 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+            if(DEBUG) fprintf(stderr,"CALLBACK12 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
             GtkWindowGravity g = (int) strtol(operanda, (char **)NULL, 10);
             ((sig_void_GtkWindowP_GtkWindowGravity)vu)(GTK_WINDOW(widget),g);
           } else
         #endif
         if(NULL != (vu=table_get(table_void_GtkWindowP_constcharP,command))) {
-            if(VERBOSE) fprintf(stderr,"CALLBACK13 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+            if(DEBUG) fprintf(stderr,"CALLBACK13 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
             ((sig_void_GtkWindowP_constcharP)vu)(GTK_WINDOW(widget),operanda);
         } else
         if(NULL != (vu=table_get(table_void_GtkWindowP_GtkWindowP,command))) { } else
@@ -427,8 +395,8 @@ void *wrap_reader_loop(void* user_data) {
             gtk_text_buffer_get_iter_at_offset(buffer, &a, 0);
             gtk_text_buffer_get_iter_at_offset(buffer, &b, -1);
             gchar* mtext = gtk_text_buffer_get_text(buffer, &a, &b, FALSE);
-            fprintf(fileout, "%s\n", mtext);  
-            fflush(fileout);
+            fprintf(pargs->fpout, "%s\n", mtext);  
+            fflush(pargs->fpout);
         } else
         //
 
@@ -454,8 +422,8 @@ void *wrap_reader_loop(void* user_data) {
         //entrytext set/get
         if(!strcmp(command, "get_entry_text")) {
             gchar* mtext = gtk_editable_get_chars(GTK_EDITABLE(widget), 0, -1);
-            fprintf(fileout, "%s\n", mtext);  
-            fflush(fileout);
+            fprintf(pargs->fpout, "%s\n", mtext);  
+            fflush(pargs->fpout);
         } else
         
         //if(!strcmp(command, "set_entry_text")) {
@@ -470,8 +438,8 @@ void *wrap_reader_loop(void* user_data) {
 
         } else
         if(!strcmp(command, "get_selected_combobox_item")) {
-            fprintf(fileout, "%d\n", gtk_combo_box_get_active(GTK_COMBO_BOX(widget)));  
-            fflush(fileout);
+            fprintf(pargs->fpout, "%d\n", gtk_combo_box_get_active(GTK_COMBO_BOX(widget)));  
+            fflush(pargs->fpout);
         } else
 
         //image set image TODO doesn't work
@@ -488,28 +456,23 @@ void *wrap_reader_loop(void* user_data) {
         //togglebutton istoggled //toggle, check, radio button 
         if(!strcmp(command, "get_button_state")) {
             if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)))
-                fprintf(fileout, "1\n");
+                fprintf(pargs->fpout, "1\n");
             else
-                fprintf(fileout, "0\n");
-            fflush(fileout);
+                fprintf(pargs->fpout, "0\n");
+            fflush(pargs->fpout);
         } else
 
         if(!strcmp(command, "gtk_editable_get_text")) {
             const char* mtext=gtk_editable_get_text(GTK_EDITABLE(widget));
-            fprintf(fileout, "%s\n", mtext);  
-            fflush(fileout);
+            fprintf(pargs->fpout, "%s\n", mtext);  
+            fflush(pargs->fpout);
         }
 
     }
 
-
-    tables_free();
-    fclose(filein);
-    fflush(fileout);
-    fclose(fileout);
-    fprintf(stderr, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! %s() Ich dachte, da kommen wir nie hin \n", __func__);
+    fprintf(stderr, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ENDE %s()... Ich dachte, da kommen wir nie hin \n", __func__);
     pthread_exit(NULL);
-  }
+}
 void wrap_add_signals(char *filename, _args* pargs) {
     if(DEBUG) fprintf(stderr, "START %s()...\n", __func__);
     //Adding signals handled in glade file
@@ -570,7 +533,8 @@ void wrap_add_signals(char *filename, _args* pargs) {
     pargs->SIGNALS[hand_count] = NULL;
 
     fclose(file); 
-  }
+    if(DEBUG) fprintf(stderr, "ENDE %s()...\n", __func__);
+}
 static void add_css(_args *pargs, GtkApplicationWindow *appwin) {
     void add_styles(_args* pargs) {
         typedef struct {
@@ -640,7 +604,7 @@ static void add_css(_args *pargs, GtkApplicationWindow *appwin) {
                                 GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     add_styles(pargs);
     g_object_unref(provider);
-  }
+}
 
 static void app_query_end(GtkApplication *app, gpointer *user_data) { 
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
@@ -687,38 +651,37 @@ static void app_startup(GtkApplication *app, gpointer *user_data) {
     gtk_window_set_application(GTK_WINDOW(win), GTK_APPLICATION(app));
     wrap_add_signals(pargs->ui_file, pargs);
     if(DEBUG) fprintf(stderr, "ENDE %s()...\n", __func__);
-  }
-static void app_do(GtkApplication *app, gpointer *user_data) {
+}
+static void app_do/*app_activate,app_open*/(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "START %s()...\n", __func__);
     _args *pargs = (_args *)user_data;
     GtkWidget *win;
     win = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->win_id));
     gtk_window_present(GTK_WINDOW(win));
-    if(pargs->fpipeout && !pargs->thread)
+    if(pargs->name_out && !pargs->thread)
         pthread_create(&(pargs->thread), NULL, wrap_reader_loop, pargs);
     add_css(pargs, GTK_APPLICATION_WINDOW(win));
-
-  #ifdef ACTIVATE_EMPTY_HANDLERS
-    // Empty handlers, perhabs to be used later
-    g_signal_connect (appwin, "activate-default", G_CALLBACK (appwin_activate_default), pargs);
-    g_signal_connect (appwin, "activate-focus", G_CALLBACK (appwin_activate_focus), pargs);
-    g_signal_connect (appwin, "close-request", G_CALLBACK (appwin_close_request), pargs);
-    g_signal_connect (appwin, "enable-debugging", G_CALLBACK (appwin_enable_debugging), pargs);
-    g_signal_connect (appwin, "destroy", G_CALLBACK (appwin_destroy), pargs);
-    g_signal_connect (appwin, "direction-changed", G_CALLBACK (appwin_direction_changed), pargs);
-    g_signal_connect (appwin, "hide", G_CALLBACK (appwin_hide), pargs);
-    g_signal_connect (appwin, "keynav-failed", G_CALLBACK (appwin_keynav_failed), pargs);
-    g_signal_connect (appwin, "map", G_CALLBACK (appwin_map), pargs);
-    g_signal_connect (appwin, "mnemonic-activate", G_CALLBACK (appwin_mnemonic_activate), pargs);
-    g_signal_connect (appwin, "move-focus", G_CALLBACK (appwin_move_focus), pargs);
-    g_signal_connect (appwin, "query-tooltip", G_CALLBACK (appwin_query_tooltip), pargs);
-    g_signal_connect (appwin, "realize", G_CALLBACK (appwin_realize), pargs);
-    g_signal_connect (appwin, "show", G_CALLBACK (appwin_show), pargs);
-    g_signal_connect (appwin, "state-flags-changed", G_CALLBACK (appwin_state_flags_changed), pargs);
-    g_signal_connect (appwin, "unmap", G_CALLBACK (appwin_unmap), pargs);
-    g_signal_connect (appwin, "unrealize", G_CALLBACK (appwin_unrealize), pargs);
-    g_signal_connect (appwin, "notify", G_CALLBACK (appwin_notify), pargs);
-  #endif
+    #ifdef ACTIVATE_EMPTY_HANDLERS
+      // Empty handlers, perhabs to be used later
+      g_signal_connect (appwin, "activate-default", G_CALLBACK (appwin_activate_default), pargs);
+      g_signal_connect (appwin, "activate-focus", G_CALLBACK (appwin_activate_focus), pargs);
+      g_signal_connect (appwin, "close-request", G_CALLBACK (appwin_close_request), pargs);
+      g_signal_connect (appwin, "enable-debugging", G_CALLBACK (appwin_enable_debugging), pargs);
+      g_signal_connect (appwin, "destroy", G_CALLBACK (appwin_destroy), pargs);
+      g_signal_connect (appwin, "direction-changed", G_CALLBACK (appwin_direction_changed), pargs);
+      g_signal_connect (appwin, "hide", G_CALLBACK (appwin_hide), pargs);
+      g_signal_connect (appwin, "keynav-failed", G_CALLBACK (appwin_keynav_failed), pargs);
+      g_signal_connect (appwin, "map", G_CALLBACK (appwin_map), pargs);
+      g_signal_connect (appwin, "mnemonic-activate", G_CALLBACK (appwin_mnemonic_activate), pargs);
+      g_signal_connect (appwin, "move-focus", G_CALLBACK (appwin_move_focus), pargs);
+      g_signal_connect (appwin, "query-tooltip", G_CALLBACK (appwin_query_tooltip), pargs);
+      g_signal_connect (appwin, "realize", G_CALLBACK (appwin_realize), pargs);
+      g_signal_connect (appwin, "show", G_CALLBACK (appwin_show), pargs);
+      g_signal_connect (appwin, "state-flags-changed", G_CALLBACK (appwin_state_flags_changed), pargs);
+      g_signal_connect (appwin, "unmap", G_CALLBACK (appwin_unmap), pargs);
+      g_signal_connect (appwin, "unrealize", G_CALLBACK (appwin_unrealize), pargs);
+      g_signal_connect (appwin, "notify", G_CALLBACK (appwin_notify), pargs);
+    #endif
     if(DEBUG) fprintf(stderr, "ENDE %s()...\n", __func__);
 }
 static void appwin_activate_default(GtkApplicationWindow *appwin, _args *pargs) {
@@ -777,20 +740,46 @@ static void appwin_notify(GtkApplicationWindow *appwin, GParamSpec * pspec, _arg
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_activate(GtkApplication *app, gpointer *user_data) {
-    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
+    if(DEBUG) fprintf(stderr, "  HANDLER %s()... ruft nur app_do auf\n", __func__);
     /* Dieser Funktion endet mit dem Anzeigen des Dialogs. 
      * Danach befinden wir uns in g_application_run */
     app_do(app, user_data);
   }
 static void app_open(GtkApplication *app, GFile ** files, gint n_files, gchar *hint, gpointer *user_data) {
-    if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
+    if(DEBUG) fprintf(stderr, "  HANDLER %s()... ruft nur app_do auf\n", __func__);
     /* Dieser Funktion endet mit dem Anzeigen des Dialogs. 
      * Danach befinden wir uns in g_application_run */
     app_do(app, user_data);
   }
 static void app_shutdown(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
-  }
+    if(VERBOSE) fprintf(stderr, "Cleaning ...\n");
+    _args *pargs = (_args *)user_data;
+    if(pargs->name_out) {
+        void* res;
+        int s = pthread_cancel(pargs->thread);
+
+        s = pthread_join(pargs->thread, &res);
+        if(s != 0) fprintf(stderr, "!!!!ERROR pthread_join ...\n");
+        if(res == PTHREAD_CANCELED) {
+            if(DEBUG) fprintf(stderr, "%s(): thread was canceled\n", __func__);
+            pargs->thread=0;
+        } else
+            fprintf(stderr, "!!!!ERROR %s(): thread wasn't canceled (shouldn't happen!)\n", __func__);
+    }
+    g_object_unref(pargs->builder);pargs->builder=NULL;
+    char **tmp = pargs->SIGNALS;
+    while(*tmp)
+        free(*tmp++);
+    free(pargs->SIGNALS);pargs->SIGNALS=NULL;
+    tables_free();
+    fclose(pargs->fpin);pargs->fpin=NULL;
+    fflush(pargs->fpout);
+    fclose(pargs->fpout);pargs->fpout=NULL;
+    unlink(pargs->name_out);
+    unlink(pargs->name_in);
+    if(DEBUG) fprintf(stderr, "ENDE %s()...\n", __func__);
+}
 static void help(char *appname) {
     fprintf(stderr, "\
     Aufruf:\n\
@@ -847,12 +836,12 @@ static void read_opts(_args *pargs, int *pargc, char*** pargv) {
             case 'o': 
                 if(VERBOSE) fprintf(stderr, "-%c: %s\n", opt, optarg);
                 if(optarg[0]=='-') fprintf(stderr, "ACHTUNG: -%c: %s\n", opt, optarg);
-                pargs->fpipeout  = optarg;
+                pargs->name_out  = optarg;
                 break; 
             case 'i': 
                 if(VERBOSE) fprintf(stderr, "-%c: %s\n", opt, optarg);
                 if(optarg[0]=='-') fprintf(stderr, "ACHTUNG: -%c: %s\n", opt, optarg);
-                pargs->fpipein  = optarg;
+                pargs->name_in  = optarg;
                 break; 
             case ':': 
                 if(VERBOSE) fprintf(stderr, "Die Option braucht einen Wert\n"); 
@@ -881,18 +870,20 @@ int main(int argc, char **argv) {
     } else {
         args.css_file  = NULL;
     }
-    args.fpipeout  = NULL;
-    args.fpipein   = NULL;
+    args.name_out  = NULL;
+    args.name_in   = NULL;
     args.win_id    = "window1";
     args.builder   = NULL;
     args.SIGNALS   = NULL;
     args.thread    = 0;
+    args.fpout     = NULL;
+    args.fpin      = NULL;
 
     read_opts(&args, &argc, &argv);
     if(DEBUG) fprintf(stderr, "MAIN:Optionen eingelesen ...\n");
     if(!args.ui_file) 
         help(args.app_name);
-    if((args.fpipeout && !args.fpipein) || (args.fpipein && !args.fpipeout))
+    if((args.name_out && !args.name_in) || (args.name_in && !args.name_out))
         help(args.app_name);
     if(VERBOSE) for(idx=0; idx < argc; idx++)fprintf(stderr, "%i: %s\n", idx, argv[idx]);
     if(VERBOSE) fprintf(stderr, "UI-Datei: %s; TOP-WINDOW: %s\n", args.ui_file, args.win_id);
@@ -922,7 +913,6 @@ int main(int argc, char **argv) {
     if(DEBUG) fprintf(stderr, "MAIN:Alle Application Handler verbunden ...\n");
     stat = g_application_run(G_APPLICATION(app), argc, argv);
     if(DEBUG) fprintf(stderr, "ENDE App läuft nicht mehr ...\n");
-    wrap_cleanup(&args);
     g_object_unref(app);
     return stat;
 }
