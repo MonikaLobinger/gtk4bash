@@ -1,9 +1,10 @@
 out/*
 gtk4bash
 debug.txt
-xx.*
 x.*
+xx.*
 xxx.*
+xxxx.*
 *.x
 *.xx
 *.xxx
