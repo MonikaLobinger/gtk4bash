@@ -35,9 +35,6 @@ typedef struct {
     char       *fpipeout;
     char       *fpipein;
     pthread_t   thread;
-    int         depth;
-    const char *id;
-    GtkWidget  *wid;
 } _args;
 
 static void appwin_activate_default(GtkApplicationWindow *appwin, _args *pargs);
@@ -575,55 +572,62 @@ void wrap_add_signals(char *filename, _args* pargs) {
 
     fclose(file); 
   }
-static void add_styles(_args* pargs) {
-    void start(void *user_data, const char *ele, const char **attr) {
-        _args *pargs = (_args*)user_data;
-        int             i;
-        if(0 == strncmp(ele,"object",6)) {
-            pargs->id="";
-            pargs->wid=NULL;
-            for (i = 0; attr[i]; i += 2) {
-                if(0 == strcmp(attr[i],"id")) {
-                    pargs->id=attr[i+1];
-                    pargs->wid = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->id));
-                    break;
-                }
-            }
-        } else if(0 == strncmp(ele,"style",5)) {
-            ;
-        } else if(0 == strncmp(ele,"class",5)) {
-            if(pargs->wid != NULL)
-                gtk_widget_add_css_class(pargs->wid,attr[1]);
-        }
-        pargs->depth++;
-    }
-    void end(void *user_data, const char *ele) {
-        _args *pargs = (_args*)user_data;
-        pargs->depth--;
-    }
-    char           *filename;
-    FILE           *fp;
-    size_t          size;
-    char           *filecontent;
-    XML_Parser      parser;
-
-    filename = pargs->ui_file;
-    parser = XML_ParserCreate(NULL);
-    if (parser == NULL) {
-        fprintf(stderr, "Kein Parser; Css Klassen nicht angebunden\n");
-    } else {
-        XML_SetUserData(parser, pargs);
-        XML_SetElementHandler(parser, start, end);
-        fp = fopen(filename, "r");
-        filecontent = malloc(MAXCHARS);
-        size = fread(filecontent, sizeof(char), MAXCHARS, fp);
-        if (XML_Parse(parser, filecontent, strlen(filecontent), XML_TRUE) == XML_STATUS_ERROR)
-            fprintf(stderr, "Fehler in %s; Css Klassen nicht angebunden\n", filename);
-        fclose(fp);
-        XML_ParserFree(parser);
-    }
-  }
 static void add_css(_args *pargs, GtkApplicationWindow *appwin) {
+    void add_styles(_args* pargs) {
+        typedef struct {
+            GtkBuilder *builder;
+            int         depth;
+            const char *id;
+            GtkWidget  *wid;
+        } xml_args;
+        xml_args args = {pargs->builder,0,NULL,NULL};
+        void start(void *user_data, const char *ele, const char **attr) {
+            xml_args *pargs = (xml_args*)user_data;
+            int             i;
+            if(0 == strncmp(ele,"object",6)) {
+                pargs->id="";
+                pargs->wid=NULL;
+                for (i = 0; attr[i]; i += 2) {
+                    if(0 == strcmp(attr[i],"id")) {
+                        pargs->id=attr[i+1];
+                        pargs->wid = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->id));
+                        break;
+                    }
+                }
+            } else if(0 == strncmp(ele,"style",5)) {
+                ;
+            } else if(0 == strncmp(ele,"class",5)) {
+                if(pargs->wid != NULL)
+                    gtk_widget_add_css_class(pargs->wid,attr[1]);
+            }
+            pargs->depth++;
+          }
+        void end(void *user_data, const char *ele) {
+            xml_args *pargs = (xml_args*)user_data;
+            pargs->depth--;
+          }
+        char           *filename;
+        FILE           *fp;
+        size_t          size;
+        char           *filecontent;
+        XML_Parser      parser;
+
+        filename = pargs->ui_file;
+        parser = XML_ParserCreate(NULL);
+        if (parser == NULL) {
+            fprintf(stderr, "Kein Parser; Css Klassen nicht angebunden\n");
+        } else {
+            XML_SetUserData(parser, &args);
+            XML_SetElementHandler(parser, start, end);
+            fp = fopen(filename, "r");
+            filecontent = malloc(MAXCHARS);
+            size = fread(filecontent, sizeof(char), MAXCHARS, fp);
+            if (XML_Parse(parser, filecontent, strlen(filecontent), XML_TRUE) == XML_STATUS_ERROR)
+                fprintf(stderr, "Fehler in %s; Css Klassen nicht angebunden\n", filename);
+            fclose(fp);
+            XML_ParserFree(parser);
+        }
+      }
     GdkDisplay *display;
     GtkCssProvider *provider;
     if(pargs->css_file == NULL || access(pargs->css_file, F_OK) != 0) 
@@ -689,14 +693,12 @@ static void app_do(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "START app_do...\n");
     _args *pargs = (_args *)user_data;
     GtkWidget *win;
-    GtkApplicationWindow* appwin;
     win = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->win_id));
-    appwin = GTK_APPLICATION_WINDOW(win);
     gtk_window_present(GTK_WINDOW(win));
     RUNNING = 1;
     if(pargs->fpipeout && !pargs->thread)
         pthread_create(&(pargs->thread), NULL, wrap_reader_loop, pargs);
-    add_css(pargs, appwin);
+    add_css(pargs, GTK_APPLICATION_WINDOW(win));
 
   #ifdef ACTIVATE_EMPTY_HANDLERS
     // Empty handlers, perhabs to be used later
@@ -888,9 +890,6 @@ int main(int argc, char **argv) {
     args.fpipeout  = NULL;
     args.fpipein   = NULL;
     args.thread    = 0;
-    args.depth     = 0;
-    args.id        = NULL;
-    args.wid       = NULL;
 
     read_opts(&args, &argc, &argv);
     if(DEBUG) fprintf(stderr, "MAIN:Optionen eingelesen...\n");

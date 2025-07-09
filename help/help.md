@@ -6,7 +6,9 @@ Gtk4bash ist ein Tool um einen GTK4 Dialog mit Bash zu steuern. Das Projekt [gtk
 
 # 1.1 Credits
 # 1.1.1 gtkwrap
-Die Kopplung zwischen Signalen und Bash, die [gtkwrap](https://github.com/abecadel/gtkwrap) für GTK2 und GTK3 erstellt verwende ich nahezu unverändert.
+[gtkwrap](https://github.com/abecadel/gtkwrap) zeigt, 
+wie gtk Funktionen der Bash bekannt gemacht werden und 
+wie man Signale und Bash koppelt.
 # 1.1.2 Blueprint Compiler
 Der [Blueprint Compiler](https://gitlab.gnome.org/GNOME/blueprint-compiler) erleichtert das Erstellen von Oberflächen sehr. Er ist zum Verwenden der Dialoge im BLP Verzeichnis nötig. 
 # 1.1.3 Expat
