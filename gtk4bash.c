@@ -23,7 +23,6 @@
 
 short DEBUG   = 0;
 short VERBOSE = 0;
-short RUNNING = 0;
 //
 typedef struct {char* name; void* fup;} FU;
 struct FUS {int size; FU* fus; struct FUS* next;};
@@ -70,11 +69,11 @@ typedef struct {
     char       *app_name;
     char       *ui_file;
     char       *css_file;
+    char       *fpipeout;
+    char       *fpipein;
     char       *win_id;
     GtkBuilder *builder;
     char*      *SIGNALS;
-    char       *fpipeout;
-    char       *fpipein;
     pthread_t   thread;
 } _args;
 
@@ -104,7 +103,6 @@ void cbk_wrap_signal_handler(gpointer user_data, GObject *object) {
   }
 static void wrap_cleanup(_args* pargs) {
     if(DEBUG) fprintf(stderr, "START %s()...\n", __func__);
-    RUNNING = 0;
     if(pargs->fpipeout) {
         void* res;
         if(DEBUG) fprintf(stderr, "!!!!VOR pthread_cancel ...\n");
@@ -301,9 +299,8 @@ void *wrap_reader_loop(void* user_data) {
           // gboolean enable_debugging (GtkWindow* window, gboolean toggle)
           // void keys_changed (GtkWindow* window)
     //
-    while(RUNNING) {
+    while(TRUE) {
         fgets(input, 1024, filein);
-        if(!RUNNING) break; 
         input[strlen(input)-1]='\0';
         command = input;
         if(command[0]=='|') {strend='|';command++;} else strend=' ';
@@ -502,7 +499,6 @@ void *wrap_reader_loop(void* user_data) {
             fprintf(fileout, "%s\n", mtext);  
             fflush(fileout);
         }
-        
 
     }
 
@@ -698,7 +694,6 @@ static void app_do(GtkApplication *app, gpointer *user_data) {
     GtkWidget *win;
     win = GTK_WIDGET(gtk_builder_get_object(pargs->builder, pargs->win_id));
     gtk_window_present(GTK_WINDOW(win));
-    RUNNING = 1;
     if(pargs->fpipeout && !pargs->thread)
         pthread_create(&(pargs->thread), NULL, wrap_reader_loop, pargs);
     add_css(pargs, GTK_APPLICATION_WINDOW(win));
@@ -795,7 +790,6 @@ static void app_open(GtkApplication *app, GFile ** files, gint n_files, gchar *h
   }
 static void app_shutdown(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
-    RUNNING = 0;
   }
 static void help(char *appname) {
     fprintf(stderr, "\
@@ -887,11 +881,11 @@ int main(int argc, char **argv) {
     } else {
         args.css_file  = NULL;
     }
+    args.fpipeout  = NULL;
+    args.fpipein   = NULL;
     args.win_id    = "window1";
     args.builder   = NULL;
     args.SIGNALS   = NULL;
-    args.fpipeout  = NULL;
-    args.fpipein   = NULL;
     args.thread    = 0;
 
     read_opts(&args, &argc, &argv);
