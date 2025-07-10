@@ -25,6 +25,12 @@
           </object>
         </child>
         <child>
+          <object class="GtkButton" id="gtk_widget_get_name">
+            <property name="label">gtk_widget_get_name</property>
+            <signal name="clicked" handler="on_button_gtk_widget_get_name_clicked"/>
+          </object>
+        </child>
+        <child>
           <object class="GtkButton" id="gtk_window_set_auto_startup_notification">
             <property name="label">gtk_window_set_auto_startup_notification</property>
             <signal name="clicked" handler="on_button_gtk_window_set_auto_startup_notification_clicked"/>

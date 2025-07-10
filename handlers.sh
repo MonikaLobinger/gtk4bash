@@ -14,6 +14,13 @@ on_button_gtk_window_get_default_icon_name_clicked(){
     echo " set_label_text  result  $val"
 } > $IN
 
+on_button_gtk_widget_get_name_clicked(){
+    val=
+    echo "gtk_widget_get_name gtk_widget_get_name"
+    read val < $OUT
+    echo "set_label_text result $val"
+} > $IN
+
 on_button_gtk_window_set_auto_startup_notification_clicked() {
     echo "gtk_window_set_auto_startup_notification 1"
 } > $IN

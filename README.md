@@ -6,9 +6,5 @@ My English is not as good as any automatic translation, e.g. [Google translate](
 
 [gtkwrap](https://github.com/abecadel/gtkwrap) für GTK4 angepasst.
 
-[Version](Version.md)
-
-[Lizenz](LICENSE)
-
 [Beschreibung](help/help.md)
 

@@ -1,4 +1,3 @@
-// wrap_add_signals von: https://github.com/abecadel/gtkwrap
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,6 +9,7 @@
 #include <unistd.h>
 #include <libintl.h>
 #include <expat.h>
+#include "gtk4bash.h"
 
 #define APP_ID "com.github.MonikaLobinger.gtk4bash"
 #define STRING_SIZE 128
@@ -65,6 +65,7 @@ void tables_free() {
     }
   }
 //
+
 typedef struct {
     char       *app_name;
     char       *ui_file;
@@ -133,20 +134,18 @@ void *wrap_reader_loop(void* user_data) {
     void trim(char *s) {
         size_t len = strspn(s, " ");
         if (len > 0) memmove(s, s + len, strlen(s) - len + 1);
-    }
+      }
+    //
     // tables alphabetisch
       FUS* table_charPP_GtkWidgetP=table_new();
       typedef char**(*sig_charPP_GtkWidgetP)(GtkWidget*);
       FUS* table_constcairo_font_options_tP_GtkWidgetP=table_new();
       typedef const cairo_font_options_t*(*sig_constcairo_font_options_tP_GtkWidgetP)(GtkWidget*);
       FUS* table_constcharP=table_new();                      // const char* void
-      typedef const char*(*sig_constcharP)();          
-      FUS* table_constcharP_GtkWidgetClassP=table_new();
-      typedef const char*(*sig_constcharP_GtkWidgetClassP)(GtkWidgetClass*);
-      FUS* table_constcharP_GtkWidgetP=table_new();
-      typedef const char*(*sig_constcharP_GtkWidgetP)(GtkWidget*);
-      FUS* table_constcharP_GtkWindowP=table_new();           // const char* GtkWindow*
-      typedef const char* (*sig_constcharP_GtkWindowP)(GtkWindow*);
+      typedef const char*(*sig_constcharP)();
+      TS_DEF_constcharP_gtknameP(GtkWidgetClass/*gtkname*/)
+      TS_DEF_constcharP_gtknameP(GtkWidget/*gtkname*/)
+      TS_DEF_constcharP_gtknameP(GtkWindow/*gtkname*/)
       FUS* table_double_GtkWidgetP=table_new();
       typedef double(*sig_double_GtkWidgetP)(GtkWidget*);
       FUS* table_gboolean_GtkWidgetClassP_guint_GTypeP_constcharPP_constGVariantTypePP_constcharPP=table_new();
@@ -377,7 +376,7 @@ void *wrap_reader_loop(void* user_data) {
       typedef void (*sig_void_GtkWindowP_int_int)(GtkWindow*, int, int);
       FUS* table_void_GtkWindowP_intP_intP=table_new();       // void GtkWindow* int* int*
       typedef void(*sig_void_GtkWindowP_intP_intP)(GtkWindow*, int*, int*);  
-     // gtk Funktionen in der Reihenfolge der doc
+    // gtk Funktionen in der Reihenfolge der doc
       /* GtkWidget ***********************************************************/
         /* Functions */
           table_add(table_GtkTextDirection_void, "gtk_widget_get_default_direction",gtk_widget_get_default_direction);
@@ -422,7 +421,7 @@ void *wrap_reader_loop(void* user_data) {
             table_add(table_void_GtkWidgetP_GdkRGBA, "gtk_widget_get_color",gtk_widget_get_color);
           #endif
           table_add(table_charPP_GtkWidgetP, "gtk_widget_get_css_classes",gtk_widget_get_css_classes);
-          table_add(table_constcharP_GtkWidgetP, "gtk_widget_get_css_name",gtk_widget_get_css_name);
+          table_add(table_constcharP_GtkWidgetP, "gtk_widget_get_css_name",gtk_widget_get_css_name); /* xx */
           /*table_GdkCursorP_GtkWidgetP*/ /*gtk_widget_get_cursor*/
           table_add(table_GtkTextDirection_GtkWidgetP, "gtk_widget_get_direction",gtk_widget_get_direction);
           /*table_GdkDisplayP_GtkWidgetP*/ /*gtk_widget_get_display*/
@@ -450,7 +449,7 @@ void *wrap_reader_loop(void* user_data) {
           table_add(table_int_GtkWidgetP, "gtk_widget_get_margin_end",gtk_widget_get_margin_end);
           table_add(table_int_GtkWidgetP, "gtk_widget_get_margin_start",gtk_widget_get_margin_start);
           table_add(table_int_GtkWidgetP, "gtk_widget_get_margin_top",gtk_widget_get_margin_top);
-          table_add(table_constcharP_GtkWidgetP, "gtk_widget_get_name",gtk_widget_get_name);
+          table_add(table_constcharP_GtkWidgetP, "gtk_widget_get_name",gtk_widget_get_name); /* xx */
           /*table_GtkNativeP_GtkWidgetP*/ /*gtk_widget_get_native*/
           /*table_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_get_next_sibling*/
           table_add(table_double_GtkWidgetP, "gtk_widget_get_opacity",gtk_widget_get_opacity);
@@ -474,8 +473,8 @@ void *wrap_reader_loop(void* user_data) {
             /*table_GtkStyleContextP_GtkWidgetP*/ /*gtk_widget_get_style_context*/
           #endif
           table_add(table_GObjectP_GtkWidgetP_GType_constcharP, "gtk_widget_get_template_child",gtk_widget_get_template_child);
-          table_add(table_constcharP_GtkWidgetP, "gtk_widget_get_tooltip_markup",gtk_widget_get_tooltip_markup);
-          table_add(table_constcharP_GtkWidgetP, "gtk_widget_get_tooltip_text",gtk_widget_get_tooltip_text);
+          table_add(table_constcharP_GtkWidgetP, "gtk_widget_get_tooltip_markup",gtk_widget_get_tooltip_markup); /* xx */
+          table_add(table_constcharP_GtkWidgetP, "gtk_widget_get_tooltip_text",gtk_widget_get_tooltip_text); /* xx */
           table_add(table_GtkAlign_GtkWidgetP, "gtk_widget_get_valign",gtk_widget_get_valign);
           table_add(table_gboolean_GtkWidgetP, "gtk_widget_get_vexpand",gtk_widget_get_vexpand);
           table_add(table_gboolean_GtkWidgetP, "gtk_widget_get_vexpand_set",gtk_widget_get_vexpand_set);
@@ -578,7 +577,7 @@ void *wrap_reader_loop(void* user_data) {
           /*table_void_GtkWidgetClassP_constcharP_gboolean_gssize*/ /*gtk_widget_class_bind_template_child_full*/
           /*table_GtkAccessibleRole_GtkWidgetClassP*/ /*gtk_widget_class_get_accessible_role*/
           table_add(table_guint_GtkWidgetClassP, "gtk_widget_class_get_activate_signal",gtk_widget_class_get_activate_signal);
-          table_add(table_constcharP_GtkWidgetClassP, "gtk_widget_class_get_css_name",gtk_widget_class_get_css_name);
+          table_add(table_constcharP_GtkWidgetClassP, "gtk_widget_class_get_css_name",gtk_widget_class_get_css_name); /* xx */
           table_add(table_GType_GtkWidgetClassP, "gtk_widget_class_get_layout_manager_type",gtk_widget_class_get_layout_manager_type);
           /*table_void_GtkWidgetClassP_constcharP_constcharP_GtkWidgetActionActivateFunc*/ /*gtk_widget_class_install_action*/
           /*table_void_GtkWidgetClassP_constcharP_constcharP*/ /*gtk_widget_class_install_property_action*/
@@ -649,11 +648,11 @@ void *wrap_reader_loop(void* user_data) {
           /*table_GtkWindowGroupP_GtkWindowP*/ /*gtk_window_get_group*/ // GtkWindowGroup* GtkWindow*
           table_add(table_gboolean_GtkWindowP,"gtk_window_get_handle_menubar_accel",gtk_window_get_handle_menubar_accel); // gboolean GtkWindow*
           table_add(table_gboolean_GtkWindowP,"gtk_window_get_hide_on_close",gtk_window_get_hide_on_close); // gboolean GtkWindow*
-          table_add(table_constcharP_GtkWindowP,"gtk_window_get_icon_name",gtk_window_get_icon_name); // const char* GtkWindow*
+          table_add(table_constcharP_GtkWindowP,"gtk_window_get_icon_name",gtk_window_get_icon_name);  /* xx */ // const char* GtkWindow*
           table_add(table_gboolean_GtkWindowP,"gtk_window_get_mnemonics_visible",gtk_window_get_mnemonics_visible); // gboolean GtkWindow*
           table_add(table_gboolean_GtkWindowP,"gtk_window_get_modal",gtk_window_get_modal); // gboolean GtkWindow*
           table_add(table_gboolean_GtkWindowP,"gtk_window_get_resizable",gtk_window_get_resizable); // gboolean GtkWindow*
-          table_add(table_constcharP_GtkWindowP,"gtk_window_get_title",gtk_window_get_title); // const char* GtkWindow*
+          table_add(table_constcharP_GtkWindowP,"gtk_window_get_title",gtk_window_get_title);  /* xx */ // const char* GtkWindow*
           /*table_GtkWidgetP_GtkWindowP*/ /*gtk_window_get_titlebar*/ // GtkWidget* GtkWindow*
           /*table_GtkWindowP_GtkWindowP*/ /*gtk_window_get_transient_for*/ // GtkWindow* GtkWindow*
           table_add(table_gboolean_GtkWindowP,"gtk_window_has_group",gtk_window_has_group); // gboolean GtkWindow*
@@ -723,432 +722,412 @@ void *wrap_reader_loop(void* user_data) {
         if(VERBOSE) fprintf(stderr, "CALLBACK:> %s %s %s %s\n", command, widget_id == NULL ? "NULL" : widget_id, operanda == NULL ? "NULL" : operanda, operandb == NULL ? "NULL" : operandb);
         GtkWidget *widget = widget_id == NULL ? NULL : GTK_WIDGET(gtk_builder_get_object(pargs->builder, widget_id));
 
-
-        if(NULL != (vu=table_get(table_charPP_GtkWidgetP,command))) { /*001*/
-            if(DEBUG) fprintf(stderr,"CALLBACK001 %s values:",command);
-            /* gtk_widget_get_css_classes */
-            char** values = ((sig_charPP_GtkWidgetP)vu)(GTK_WIDGET(widget));
-            int i = 0;
-            char *value=values[i++];
-            while(value) {
-                if(DEBUG) fprintf(stderr," %s ",value);
-                fprintf(pargs->fpout, "%s ", value);
-                value=values[i++];
-            }
-            fprintf(pargs->fpout, "\n", value);
-            fflush(pargs->fpout);
-            if(DEBUG) fprintf(stderr,"\n");
-        } else
-        if(NULL != (vu=table_get(table_constcairo_font_options_tP_GtkWidgetP,command))) { /*002*/} else
-        if(NULL != (vu=table_get(table_constcharP,command))) { /*003*/
-            if(DEBUG) fprintf(stderr,"CALLBACK003 %s value:",command);
-            const char* value = ((sig_constcharP)vu)();
-            if(DEBUG) fprintf(stderr," %s\n",value);
-            fprintf(pargs->fpout, "%s\n", value);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_constcharP_GtkWidgetClassP,command))) { /*004*/
-            /*gtk_widget_class_get_css_name*/
-            if(DEBUG) fprintf(stderr,"CALLBACK004 %s, widget_id: %s value:",command,widget_id);
-            const char* value = ((sig_constcharP_GtkWidgetClassP)vu)(GTK_WIDGET_GET_CLASS(widget));
-            if(DEBUG) fprintf(stderr," %s\n",value);
-            fprintf(pargs->fpout, "%s\n", value);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_constcharP_GtkWidgetP,command))) { /*005*/
-            /*e.g. gtk_widget_get_css_name*/
-            if(DEBUG) fprintf(stderr,"CALLBACK005 %s, widget_id: %s value:",command,widget_id);
-            const char*value = ((sig_constcharP_GtkWidgetP)vu)(GTK_WIDGET(widget));
-            if(DEBUG) fprintf(stderr," %s\n",value);
-            fprintf(pargs->fpout, "%s\n", value);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_constcharP_GtkWindowP,command))) { /*006*/
-            if(DEBUG) fprintf(stderr,"CALLBACK006 %s, widget_id: %s value:",command,widget_id);
-            const char*value = ((sig_constcharP_GtkWindowP)vu)(GTK_WINDOW(widget));
-            if(DEBUG) fprintf(stderr," %s\n",value);
-            fprintf(pargs->fpout, "%s\n", value);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_double_GtkWidgetP,command))) { /*007*/
-            /*gtk_widget_get_opacity*/
-            if(DEBUG) fprintf(stderr,"CALLBACK007 %s, widget_id: %s value:",command,widget_id);
-            double dvalue = ((sig_double_GtkWidgetP)vu)(GTK_WIDGET(widget));
-            if(DEBUG) fprintf(stderr," %f\n",dvalue);
-            fprintf(pargs->fpout, "%f\n", dvalue);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetClassP_guint_GTypeP_constcharPP_constGVariantTypePP_constcharPP,command))) { /*008*/} else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_constcharP,command))) { /*009*/
-            /*gtk_widget_has_css_class*/
-            if(DEBUG) fprintf(stderr,"CALLBACK009 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
-            gboolean bvalue = ((sig_gboolean_GtkWidgetP_constcharP)vu)(GTK_WIDGET(widget),operanda);
-            if(DEBUG) fprintf(stderr," %i\n",bvalue);
-            fprintf(pargs->fpout, "%i\n", bvalue);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_constcharP_constcharP_Elipse,command))) { /*010*/} else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_constcharP_GVariantP,command))) { /*011*/} else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_double_double,command))) { /*012*/
-            /*gtk_widget_contains*/
-            if(DEBUG) fprintf(stderr,"CALLBACK012 %s, widget_id: %s, argument1: %s argument2: %s value:",command,widget_id,operanda,operandb);
-            double da=atof(operanda);
-            double db=atof(operandb);
-            gboolean bvalue = ((sig_gboolean_GtkWidgetP_double_double)vu)(GTK_WIDGET(widget),da,db);
-            if(DEBUG) fprintf(stderr," %i\n",bvalue);
-            fprintf(pargs->fpout, "%i\n", bvalue);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_gboolean,command))) { /*013*/
-            /*gtk_widget_mnemonic_activate*/
-            if(DEBUG) fprintf(stderr,"CALLBACK013 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
-            int ai=atoi(operanda);
-            gboolean bvalue = ((sig_gboolean_GtkWidgetP_gboolean)vu)(GTK_WIDGET(widget),ai);
-            if(DEBUG) fprintf(stderr," %i\n",bvalue);
-            fprintf(pargs->fpout, "%i\n", bvalue);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkDirectionType,command))) { /*014*/} else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkOrientation,command))) { /*015*/} else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkWidgetP_constgraphene_point_tP_graphene_point_tP,command))) { /*016*/} else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkWidgetP_double_double_doubleP_doubleP,command))) { /*017*/} else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkWidgetP_graphene_matrix_tP,command))) { /*018*/} else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkWidgetP,command))) { /*019*/} else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkWidgetP_graphene_rect_tP,command))) { /*020*/} else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_int_int_int_int,command))) { /*021*/} else
-        if(NULL != (vu=table_get(table_gboolean_GtkWidgetP,command))) { /*022*/
-            /*e.g. gtk_widget_is_visible*/
-            if(DEBUG) fprintf(stderr,"CALLBACK022 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
-            gboolean bvalue = ((sig_gboolean_GtkWidgetP)vu)(GTK_WIDGET(widget));
-            if(DEBUG) fprintf(stderr," %i\n",bvalue);
-            fprintf(pargs->fpout, "%i\n", bvalue);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_gboolean_GtkWindowP,command))) { /*023*/
-            if(DEBUG) fprintf(stderr,"CALLBACK023 %s, widget_id: %s value:",command,widget_id);
-            gboolean bvalue = ((sig_gboolean_GtkWindowP)vu)(GTK_WINDOW(widget));
-            if(DEBUG) fprintf(stderr," %i\n",bvalue);
-            fprintf(pargs->fpout, "%i\n", bvalue);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_GdkClipboardP_GtkWidgetP,command))) { /*024*/} else
-        if(NULL != (vu=table_get(table_GdkCursorP_GtkWidgetP,command))) { /*025*/} else
-        if(NULL != (vu=table_get(table_GdkDisplayP_GtkWidgetP,command))) { /*026*/} else
-        if(NULL != (vu=table_get(table_GdkFrameClockP_GtkWidgetP,command))) { /*027*/} else
-        if(NULL != (vu=table_get(table_GListP,command))) { /*028*/} else
-        if(NULL != (vu=table_get(table_GListP_GtkWidgetP,command))) { /*029*/} else
-        if(NULL != (vu=table_get(table_GListModelP,command))) { /*030*/} else
-        if(NULL != (vu=table_get(table_GListModelP_GtkWidgetP,command))) { /*031*/} else
-        if(NULL != (vu=table_get(table_GObjectP_GtkWidgetP_GType_constcharP,command))) { /*032*/} else
-        if(NULL != (vu=table_get(table_GtkAccessibleRole_GtkWidgetClassP,command))) { /*033*/} else
-        if(NULL != (vu=table_get(table_GtkAlign_GtkWidgetP,command))) { /*034*/
-            /*e.g. gtk_widget_get_halign*/
-            if(DEBUG) fprintf(stderr,"CALLBACK034 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
-            GtkAlign align_value = ((sig_GtkAlign_GtkWidgetP)vu)(GTK_WIDGET(widget));
-            if(DEBUG) fprintf(stderr," %i\n",align_value);
-            fprintf(pargs->fpout, "%i\n", align_value);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_GtkApplication_GtkWindowP,command))) { /*035*/} else
-        if(NULL != (vu=table_get(table_GtkLayoutManagerP_GtkWidgetP,command))) { /*036*/} else
-        if(NULL != (vu=table_get(table_GtkNativeP_GtkWidgetP,command))) { /*037*/} else
-        if(NULL != (vu=table_get(table_GtkOverflow_GtkWidgetP,command))) { /*038*/
-            /*gtk_widget_get_overflow*/
-            if(DEBUG) fprintf(stderr,"CALLBACK038 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
-            GtkOverflow overflow_value = ((sig_GtkOverflow_GtkWidgetP)vu)(GTK_WIDGET(widget));
-            if(DEBUG) fprintf(stderr," %i\n",overflow_value);
-            fprintf(pargs->fpout, "%i\n", overflow_value);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_GtkRootP_GtkWidgetP,command))) { /*039*/} else
-        if(NULL != (vu=table_get(table_GtkSettingsP_GtkWidgetP,command))) { /*040*/} else
-        if(NULL != (vu=table_get(table_GtkSizeRequestMode_GtkWidgetP,command))) { /*041*/
-            /*gtk_widget_get_request_mode*/
-            if(DEBUG) fprintf(stderr,"CALLBACK041 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
-            GtkSizeRequestMode request_mode_value = ((sig_GtkSizeRequestMode_GtkWidgetP)vu)(GTK_WIDGET(widget));
-            if(DEBUG) fprintf(stderr," %i\n",request_mode_value);
-            fprintf(pargs->fpout, "%i\n", request_mode_value);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_GtkStateFlags_GtkWidgetP,command))) { /*042*/
-            /*gtk_widget_get_state_flags*/
-            if(DEBUG) fprintf(stderr,"CALLBACK042 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
-            GtkStateFlags flags_value = ((sig_GtkStateFlags_GtkWidgetP)vu)(GTK_WIDGET(widget));
-            if(DEBUG) fprintf(stderr," %i\n",flags_value);
-            fprintf(pargs->fpout, "%i\n", flags_value);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_GtkStyleContextP_GtkWidgetP,command))) { /*043*/} else
-        if(NULL != (vu=table_get(table_GtkTextDirection_GtkWidgetP,command))) { /*044*/
-            /*gtk_widget_get_direction*/
-            if(DEBUG) fprintf(stderr,"CALLBACK044 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
-            GtkTextDirection direction_value = ((sig_GtkTextDirection_GtkWidgetP)vu)(GTK_WIDGET(widget));
-            if(DEBUG) fprintf(stderr," %i\n",direction_value);
-            fprintf(pargs->fpout, "%i\n", direction_value);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_GtkTextDirection_void,command))) { /*045*/
-            if(DEBUG) fprintf(stderr,"CALLBACK045 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
-            GtkTextDirection direction_value = ((sig_GtkTextDirection_void)vu)();
-            if(DEBUG) fprintf(stderr," %i\n",direction_value);
-            fprintf(pargs->fpout, "%i\n", direction_value);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_GtkWidgetP_GtkWidgetP,command))) { /*046*/} else
-        if(NULL != (vu=table_get(table_GtkWidgetP_GtkWidgetP_double_double_GtkPickFlags,command))) { /*047*/} else
-        if(NULL != (vu=table_get(table_GtkWidgetP_GtkWidgetP_GType,command))) { /*048*/} else
-        if(NULL != (vu=table_get(table_GtkWidgetP_GtkWindowP,command))) { /*049*/} else
-        #if GTK_MINOR_VERSION >= 20
-          if(NULL != (vu=table_get(table_GtkWindowGravity_GtkWindowP,command))) { /*118*/
-            if(DEBUG) fprintf(stderr,"CALLBACK118 %s, widget_id: %s value:",command,widget_id);
-            GtkWindowGravity g = ((sig_GtkWindowGravity_GtkWindowP)vu)(GTK_WINDOW(widget));
-            if(DEBUG) fprintf(stderr," %i\n",g);
-            fprintf(pargs->fpout, "%i\n", g);
-            fflush(pargs->fpout);
+        // Alle Tabellen durchsuchen
+          if(NULL != (vu=table_get(table_charPP_GtkWidgetP,command))) { /*001*/
+              if(DEBUG) fprintf(stderr,"CALLBACK001 %s values:",command);
+              /* gtk_widget_get_css_classes */
+              char** values = ((sig_charPP_GtkWidgetP)vu)(GTK_WIDGET(widget));
+              int i = 0;
+              char *value=values[i++];
+              while(value) {
+                  if(DEBUG) fprintf(stderr," %s ",value);
+                  fprintf(pargs->fpout, "%s ", value);
+                  value=values[i++];
+              }
+              fprintf(pargs->fpout, "\n", value);
+              fflush(pargs->fpout);
+              if(DEBUG) fprintf(stderr,"\n");
           } else
-        #endif
-        if(NULL != (vu=table_get(table_GtkWindowGroupP_GtkWindowP,command))) { /*050*/} else
-        if(NULL != (vu=table_get(table_GtkWindowP_GtkWindowP,command))) { /*051*/} else
-        if(NULL != (vu=table_get(table_GType_GtkWidgetClassP,command))) { /*052*/
-            /*gtk_widget_class_get_layout_manager_type*/
-            if(DEBUG) fprintf(stderr,"CALLBACK052 %s, widget_id: %s value:",command,widget_id);
-            GType type_value = ((sig_GType_GtkWidgetClassP)vu)(GTK_WIDGET_GET_CLASS(widget));
-            if(DEBUG) fprintf(stderr," %i\n",type_value);
-            fprintf(pargs->fpout, "%s\n", type_value);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_guint_GtkWidgetClassP,command))) { /*053*/
-            /*gtk_widget_class_get_activate_signal*/
-            if(DEBUG) fprintf(stderr,"CALLBACK053 %s, widget_id: %s value:",command,widget_id);
-            guint ivalue = ((sig_guint_GtkWidgetClassP)vu)(GTK_WIDGET_GET_CLASS(widget));
-            if(DEBUG) fprintf(stderr," %i\n",ivalue);
-            fprintf(pargs->fpout, "%s\n", ivalue);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_guint_GtkWidgetP_GtkTickCallback_gpointer_GDestroyNotify,command))) { /*054*/} else
-        if(NULL != (vu=table_get(table_int_GtkWidgetP,command))) { /*055*/
-            /*e.g. gtk_widget_get_width*/
-            if(DEBUG) fprintf(stderr,"CALLBACK055 %s, widget_id: %s value:",command,widget_id);
-            int ivalue = ((sig_int_GtkWidgetP)vu)(GTK_WIDGET(widget));
-            if(DEBUG) fprintf(stderr," %i\n",ivalue);
-            fprintf(pargs->fpout, "%s\n", ivalue);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_int_GtkWidgetP_GtkOrientation,command))) { /*056*/
-            /*gtk_widget_get_size*/
-            if(DEBUG) fprintf(stderr,"CALLBACK056 %s, widget_id: %s argument: %s value:",command,widget_id,operanda);
-            GtkOrientation i_arg=atoi(operanda);
-            int ivalue = ((sig_int_GtkWidgetP_GtkOrientation)vu)(GTK_WIDGET(widget),i_arg);
-            if(DEBUG) fprintf(stderr," %i\n",ivalue);
-            fprintf(pargs->fpout, "%s\n", ivalue);
-            fflush(pargs->fpout);
-        } else
-        if(NULL != (vu=table_get(table_PangoContextP_GtkWidgetP,command))) { /*057*/} else
-        if(NULL != (vu=table_get(table_PangoFontMapP_GtkWidgetP,command))) { /*058*/} else
-        if(NULL != (vu=table_get(table_PangoLayoutP_GtkWidgetP_constcharP,command))) { /*059*/} else
-        if(NULL != (vu=table_get(table_void_constcharP,command))) { /*060*/
-            if(DEBUG) fprintf(stderr,"CALLBACK060 %s, argument: %s\n",command,operanda);
-            ((sig_void_constcharP)vu)(operanda);
-        } else
-        if(NULL != (vu=table_get(table_void_gboolean,command))) { /*061*/
-            if(DEBUG) fprintf(stderr,"CALLBACK061 %s, argument: %s\n",command,operanda);
-            gboolean b = atoi(operanda);
-            ((sig_void_gboolean)vu)(b);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkTextDirection,command))) { /*062*/
-            if(DEBUG) fprintf(stderr,"CALLBACK062 %s, argument: %s\n",command,operanda);
-            GtkTextDirection d = atoi(operanda);
-            ((sig_void_GtkTextDirection)vu)(d);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_constcharP,command))) { /*063*/
-            if(DEBUG) fprintf(stderr,"CALLBACK063 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
-            ((sig_void_GtkWidgetClassP_constcharP)vu)(GTK_WIDGET_GET_CLASS(widget), operanda);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_constcharP_constcharP,command))) { /*064*/
-            if(DEBUG) fprintf(stderr,"CALLBACK064 %s, widget_id: %s argument1: %s argument2: %s\n",command,widget_id,operanda, operandb);
-            ((sig_void_GtkWidgetClassP_constcharP_constcharP)vu)(GTK_WIDGET_GET_CLASS(widget), operanda, operandb);
-        } else    
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_constcharP_constcharP_GtkWidgetActionActivateFunc,command))) { /*065*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_constcharP_gboolean_gssize,command))) { /*066*/
-            if(DEBUG) fprintf(stderr,"CALLBACK066 %s, widget_id: %s argument1: %s argument2: %s argument3: %s\n",command,widget_id,operanda, operandb, operandc);
-            gboolean b = atoi(operandb);
-            int i = atoi(operandc);
-            ((sig_void_GtkWidgetClassP_constcharP_gboolean_gssize)vu)(GTK_WIDGET_GET_CLASS(widget), operanda, b,i);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_constcharP_GCallback,command))) { /*067*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_GBytesP,command))) { /*068*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_GtkAccessibleRole,command))) { /*069*/
-            if(DEBUG) fprintf(stderr,"CALLBACK069 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
-            int i = atoi(operanda);
-            ((sig_void_GtkWidgetClassP_GtkAccessibleRole)vu)(GTK_WIDGET_GET_CLASS(widget), i);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_GtkBuilderScopeP,command))) { /*070*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_GtkShortcutP,command))) { /*071*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_GType,command))) { /*072*/
-            if(DEBUG) fprintf(stderr,"CALLBACK072 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
-            GType i = atoi(operanda);
-            ((sig_void_GtkWidgetClassP_GType)vu)(GTK_WIDGET_GET_CLASS(widget), i);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_guint,command))) { /*073*/
-            if(DEBUG) fprintf(stderr,"CALLBACK073 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
-            guint i = atoi(operanda);
-            ((sig_void_GtkWidgetClassP_guint)vu)(GTK_WIDGET_GET_CLASS(widget), i);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_guint_GdkModifierType_constcharP_constcharP_Elipse,command))) { /*074*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetClassP_guint_GdkModifierType_GtkShortcutFunc_constcharP_Elipse,command))) { /*075*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP,command))) { /*076*/
-            if(DEBUG) fprintf(stderr,"CALLBACK076 %s, widget_id: %s\n",command,widget_id);
-            ((sig_void_GtkWidgetP)vu)(GTK_WIDGET(widget));
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_constcairo_font_options_tP,command))) { /*077*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_constcharP,command))) { /*078*/
-            if(DEBUG) fprintf(stderr,"CALLBACK078 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
-            ((sig_void_GtkWidgetP_constcharP)vu)(GTK_WIDGET(widget), operanda);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_constcharP_GActionGroupP,command))) { /*079*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_constcharP_gboolean,command))) { /*080*/
-            if(DEBUG) fprintf(stderr,"CALLBACK078 %s, widget_id: %s argument1: %s argument2: %s\n",command,widget_id,operanda,operandb);
-            gboolean b = atoi(operanda);
-            ((sig_void_GtkWidgetP_constcharP_gboolean)vu)(GTK_WIDGET(widget), operanda,b);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_constcharPP,command))) { /*081*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_constGtkAllocationP_int,command))) { /*082*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_double,command))) { /*083*/
-            if(DEBUG) fprintf(stderr,"CALLBACK083 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
-            double d = atof(operanda);
-            ((sig_void_GtkWidgetP_double)vu)(GTK_WIDGET(widget), d);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_gboolean,command))) { /*084*/
-            if(DEBUG) fprintf(stderr,"CALLBACK084 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
-            gboolean b = atoi(operanda);
-            ((sig_void_GtkWidgetP_gboolean)vu)(GTK_WIDGET(widget), b);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GdkCursorP,command))) { /*085*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GdkRGBA,command))) { /*086*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkAlign,command))) { /*087*/
-            if(DEBUG) fprintf(stderr,"CALLBACK087 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
-            GtkAlign a = atoi(operanda);
-            ((sig_void_GtkWidgetP_GtkAlign)vu)(GTK_WIDGET(widget), a);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkAllocationP,command))) { /*088*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkEventControllerP,command))) { /*089*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkLayoutManagerP,command))) { /*090*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkOrientation_int_intP_intP_intP_intP,command))) { /*091*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkOverflow,command))) { /*092*/
-            if(DEBUG) fprintf(stderr,"CALLBACK092 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
-            GtkOverflow o = atoi(operanda);
-            ((sig_void_GtkWidgetP_GtkOverflow)vu)(GTK_WIDGET(widget), o);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkRequisitionP_GtkRequisitionP,command))) { /*093*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkStateFlags,command))) { /*094*/
-            if(DEBUG) fprintf(stderr,"CALLBACK095 %s, widget_id: %s argument: %s \n",command,widget_id,operanda);
-            GtkStateFlags f = atoi(operanda);
-            ((sig_void_GtkWidgetP_GtkStateFlags)vu)(GTK_WIDGET(widget), f);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkStateFlags_gboolean,command))) { /*095*/
-            if(DEBUG) fprintf(stderr,"CALLBACK095 %s, widget_id: %s argument1: %s argument2: %s\n",command,widget_id,operanda,operandb);
-            GtkStateFlags f = atoi(operanda);
-            gboolean b = atoi(operandb);
-            ((sig_void_GtkWidgetP_GtkStateFlags_gboolean)vu)(GTK_WIDGET(widget), f,b);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkTextDirection,command))) { /*096*/
-            if(DEBUG) fprintf(stderr,"CALLBACK096 %s, widget_id: %s argument: %s \n",command,widget_id,operanda);
-            GtkTextDirection td = atoi(operanda);
-            ((sig_void_GtkWidgetP_GtkTextDirection)vu)(GTK_WIDGET(widget), td);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkWidgetP,command))) { /*097*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkWidgetP_GtkSnapshotP,command))) { /*098*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkWidgetP_GtkWidgetP,command))) { /*099*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_GType,command))) { /*100*/
-            if(DEBUG) fprintf(stderr,"CALLBACK096 %s, widget_id: %s argument: %s \n",command,widget_id,operanda);
-            GType t = atoi(operanda);
-            ((sig_void_GtkWidgetP_GType)vu)(GTK_WIDGET(widget), t);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_guint,command))) { /*101*/
-            if(DEBUG) fprintf(stderr,"CALLBACK096 %s, widget_id: %s argument: %s \n",command,widget_id,operanda);
-            guint i = atoi(operanda);
-            ((sig_void_GtkWidgetP_guint)vu)(GTK_WIDGET(widget), i);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_int,command))) { /*102*/
-            if(DEBUG) fprintf(stderr,"CALLBACK096 %s, widget_id: %s argument: %s \n",command,widget_id,operanda);
-            int i = atoi(operanda);
-            ((sig_void_GtkWidgetP_int)vu)(GTK_WIDGET(widget), i);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_int_int,command))) { /*103*/
-            if(DEBUG) fprintf(stderr,"CALLBACK096 %s, widget_id: %s argument1: %s argument2: %s \n",command,widget_id,operanda,operandb);
-            int i1 = atoi(operanda);
-            int i2 = atoi(operandb);
-            ((sig_void_GtkWidgetP_int_int)vu)(GTK_WIDGET(widget), i1, i2);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_int_int_int_GskTransformP,command))) { /*104*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_intP_intP,command))) { /*105*/} else
-        if(NULL != (vu=table_get(table_void_GtkWidgetP_PangoFontMapP,command))) { /*106*/} else
-        if(NULL != (vu=table_get(table_void_GtkWindowP,command))) { /*107*/
-            if(DEBUG) fprintf(stderr,"CALLBACK107 %s, widget_id: %s\n",command,widget_id);
-            ((sig_void_GtkWindowP)vu)(GTK_WINDOW(widget));
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWindowP_constcharP,command))) { /*108*/
-            if(DEBUG) fprintf(stderr,"CALLBACK108 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
-            ((sig_void_GtkWindowP_constcharP)vu)(GTK_WINDOW(widget),operanda);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWindowP_gboolean,command))) { /*109*/
-            if(DEBUG) fprintf(stderr,"CALLBACK109 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
-            gboolean b = (int) strtol(operanda, (char **)NULL, 10) == 0 ? FALSE : TRUE;
-            ((sig_void_GtkWindowP_gboolean)vu)(GTK_WINDOW(widget),b);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWindowP_GdkDisplayP,command))) { /*110*/} else
-        if(NULL != (vu=table_get(table_void_GtkWindowP_GdkMonitorP,command))) { /*111*/} else
-        if(NULL != (vu=table_get(table_void_GtkWindowP_GtkApplicationP,command))) { /*112*/} else
-        if(NULL != (vu=table_get(table_void_GtkWindowP_GtkWidgetP,command))) { /*113*/} else
-        #if GTK_MINOR_VERSION >= 20
-          if(NULL != (vu=table_get(table_void_GtkWindowP_GtkWindowGravity,command))) { /*119*/ 
-            if(DEBUG) fprintf(stderr,"CALLBACK119 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
-            GtkWindowGravity g = (int) strtol(operanda, (char **)NULL, 10);
-            ((sig_void_GtkWindowP_GtkWindowGravity)vu)(GTK_WINDOW(widget),g);
+          if(NULL != (vu=table_get(table_constcairo_font_options_tP_GtkWidgetP,command))) { /*002*/} else
+          if(NULL != (vu=table_get(table_constcharP,command))) { /*003*/
+              if(DEBUG) fprintf(stderr,"CALLBACK003 %s value:",command);
+              const char* value = ((sig_constcharP)vu)();
+              if(DEBUG) fprintf(stderr," %s\n",value);
+              fprintf(pargs->fpout, "%s\n", value);
+              fflush(pargs->fpout);
           } else
-        #endif
-        if(NULL != (vu=table_get(table_void_GtkWindowP_GtkWindowP,command))) { /*114*/} else
-        if(NULL != (vu=table_get(table_void_GtkWindowP_guint32,command))) { /*115*/
-            if(DEBUG) fprintf(stderr,"CALLBACK115 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
-            guint32 i = (int) strtol(operanda, (char **)NULL, 10);
-            ((sig_void_GtkWindowP_guint32)vu)(GTK_WINDOW(widget),i);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWindowP_int_int,command))) { /*116*/
-            if(DEBUG) fprintf(stderr,"CALLBACK116 %s, widget_id: %s, argument1: %s, argument2: %s\n",command,widget_id,operanda, operandb);
-            int x = (int) strtol(operanda, (char **)NULL, 10);
-            int y = (int) strtol(operandb, (char **)NULL, 10);
-            ((sig_void_GtkWindowP_int_int)vu)(GTK_WINDOW(widget),x,y);
-        } else
-        if(NULL != (vu=table_get(table_void_GtkWindowP_intP_intP,command))) { /*117*/
-            if(DEBUG) fprintf(stderr,"CALLBACK117 %s, widget_id: %s\n",command,widget_id);
-            int x, y;
-            ((sig_void_GtkWindowP_intP_intP)vu)(GTK_WINDOW(widget),&x, &y);
-            fprintf(pargs->fpout, "%i\n", x);
-            fprintf(pargs->fpout, "%i\n", y);
-            fflush(pargs->fpout);
-        } else /*118*//*119*/
-        
-
-        if(!strcmp(command, "set_textview_text")) {
-            gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), operanda, -1); 
-        } else
-        if(!strcmp(command, "get_textview_text")) {
-            GtkTextIter a, b;
-            GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)); 
-            gtk_text_buffer_get_iter_at_offset(buffer, &a, 0);
-            gtk_text_buffer_get_iter_at_offset(buffer, &b, -1);
-            gchar* mtext = gtk_text_buffer_get_text(buffer, &a, &b, FALSE);
-            fprintf(pargs->fpout, "%s\n", mtext);  
-            fflush(pargs->fpout);
-        } else
-        if(!strcmp(command, "set_label_text")) {
-            gtk_label_set_text(GTK_LABEL(widget), operanda);
-        } else
-        if(!strcmp(command, "gtk_editable_get_text")) {
-            const char* mtext=gtk_editable_get_text(GTK_EDITABLE(widget));
-            fprintf(pargs->fpout, "%s\n", mtext);  
-            fflush(pargs->fpout);
-        }
+          TS_CALL_constcharP_gtknameP(GtkWidgetClass/*gtkname*/,GTK_WIDGET_GET_CLASS/*gtkcast*/,004/*nr*/)
+          TS_CALL_constcharP_gtknameP(GtkWidget/*gtkname*/,GTK_WIDGET/*gtkcast*/,005/*nr*/)
+          TS_CALL_constcharP_gtknameP(GtkWindow/*gtkname*/,GTK_WINDOW/*gtkcast*/,006/*nr*/)
+          if(NULL != (vu=table_get(table_double_GtkWidgetP,command))) { /*007*/
+              /*gtk_widget_get_opacity*/
+              if(DEBUG) fprintf(stderr,"CALLBACK007 %s, widget_id: %s value:",command,widget_id);
+              double dvalue = ((sig_double_GtkWidgetP)vu)(GTK_WIDGET(widget));
+              if(DEBUG) fprintf(stderr," %f\n",dvalue);
+              fprintf(pargs->fpout, "%f\n", dvalue);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetClassP_guint_GTypeP_constcharPP_constGVariantTypePP_constcharPP,command))) { /*008*/} else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_constcharP,command))) { /*009*/
+              /*gtk_widget_has_css_class*/
+              if(DEBUG) fprintf(stderr,"CALLBACK009 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
+              gboolean bvalue = ((sig_gboolean_GtkWidgetP_constcharP)vu)(GTK_WIDGET(widget),operanda);
+              if(DEBUG) fprintf(stderr," %i\n",bvalue);
+              fprintf(pargs->fpout, "%i\n", bvalue);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_constcharP_constcharP_Elipse,command))) { /*010*/} else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_constcharP_GVariantP,command))) { /*011*/} else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_double_double,command))) { /*012*/
+              /*gtk_widget_contains*/
+              if(DEBUG) fprintf(stderr,"CALLBACK012 %s, widget_id: %s, argument1: %s argument2: %s value:",command,widget_id,operanda,operandb);
+              double da=atof(operanda);
+              double db=atof(operandb);
+              gboolean bvalue = ((sig_gboolean_GtkWidgetP_double_double)vu)(GTK_WIDGET(widget),da,db);
+              if(DEBUG) fprintf(stderr," %i\n",bvalue);
+              fprintf(pargs->fpout, "%i\n", bvalue);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_gboolean,command))) { /*013*/
+              /*gtk_widget_mnemonic_activate*/
+              if(DEBUG) fprintf(stderr,"CALLBACK013 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
+              int ai=atoi(operanda);
+              gboolean bvalue = ((sig_gboolean_GtkWidgetP_gboolean)vu)(GTK_WIDGET(widget),ai);
+              if(DEBUG) fprintf(stderr," %i\n",bvalue);
+              fprintf(pargs->fpout, "%i\n", bvalue);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkDirectionType,command))) { /*014*/} else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkOrientation,command))) { /*015*/} else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkWidgetP_constgraphene_point_tP_graphene_point_tP,command))) { /*016*/} else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkWidgetP_double_double_doubleP_doubleP,command))) { /*017*/} else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkWidgetP_graphene_matrix_tP,command))) { /*018*/} else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkWidgetP,command))) { /*019*/} else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_GtkWidgetP_graphene_rect_tP,command))) { /*020*/} else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_int_int_int_int,command))) { /*021*/} else
+          if(NULL != (vu=table_get(table_gboolean_GtkWidgetP,command))) { /*022*/
+              /*e.g. gtk_widget_is_visible*/
+              if(DEBUG) fprintf(stderr,"CALLBACK022 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
+              gboolean bvalue = ((sig_gboolean_GtkWidgetP)vu)(GTK_WIDGET(widget));
+              if(DEBUG) fprintf(stderr," %i\n",bvalue);
+              fprintf(pargs->fpout, "%i\n", bvalue);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_gboolean_GtkWindowP,command))) { /*023*/
+              if(DEBUG) fprintf(stderr,"CALLBACK023 %s, widget_id: %s value:",command,widget_id);
+              gboolean bvalue = ((sig_gboolean_GtkWindowP)vu)(GTK_WINDOW(widget));
+              if(DEBUG) fprintf(stderr," %i\n",bvalue);
+              fprintf(pargs->fpout, "%i\n", bvalue);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_GdkClipboardP_GtkWidgetP,command))) { /*024*/} else
+          if(NULL != (vu=table_get(table_GdkCursorP_GtkWidgetP,command))) { /*025*/} else
+          if(NULL != (vu=table_get(table_GdkDisplayP_GtkWidgetP,command))) { /*026*/} else
+          if(NULL != (vu=table_get(table_GdkFrameClockP_GtkWidgetP,command))) { /*027*/} else
+          if(NULL != (vu=table_get(table_GListP,command))) { /*028*/} else
+          if(NULL != (vu=table_get(table_GListP_GtkWidgetP,command))) { /*029*/} else
+          if(NULL != (vu=table_get(table_GListModelP,command))) { /*030*/} else
+          if(NULL != (vu=table_get(table_GListModelP_GtkWidgetP,command))) { /*031*/} else
+          if(NULL != (vu=table_get(table_GObjectP_GtkWidgetP_GType_constcharP,command))) { /*032*/} else
+          if(NULL != (vu=table_get(table_GtkAccessibleRole_GtkWidgetClassP,command))) { /*033*/} else
+          if(NULL != (vu=table_get(table_GtkAlign_GtkWidgetP,command))) { /*034*/
+              /*e.g. gtk_widget_get_halign*/
+              if(DEBUG) fprintf(stderr,"CALLBACK034 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
+              GtkAlign align_value = ((sig_GtkAlign_GtkWidgetP)vu)(GTK_WIDGET(widget));
+              if(DEBUG) fprintf(stderr," %i\n",align_value);
+              fprintf(pargs->fpout, "%i\n", align_value);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_GtkApplication_GtkWindowP,command))) { /*035*/} else
+          if(NULL != (vu=table_get(table_GtkLayoutManagerP_GtkWidgetP,command))) { /*036*/} else
+          if(NULL != (vu=table_get(table_GtkNativeP_GtkWidgetP,command))) { /*037*/} else
+          if(NULL != (vu=table_get(table_GtkOverflow_GtkWidgetP,command))) { /*038*/
+              /*gtk_widget_get_overflow*/
+              if(DEBUG) fprintf(stderr,"CALLBACK038 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
+              GtkOverflow overflow_value = ((sig_GtkOverflow_GtkWidgetP)vu)(GTK_WIDGET(widget));
+              if(DEBUG) fprintf(stderr," %i\n",overflow_value);
+              fprintf(pargs->fpout, "%i\n", overflow_value);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_GtkRootP_GtkWidgetP,command))) { /*039*/} else
+          if(NULL != (vu=table_get(table_GtkSettingsP_GtkWidgetP,command))) { /*040*/} else
+          if(NULL != (vu=table_get(table_GtkSizeRequestMode_GtkWidgetP,command))) { /*041*/
+              /*gtk_widget_get_request_mode*/
+              if(DEBUG) fprintf(stderr,"CALLBACK041 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
+              GtkSizeRequestMode request_mode_value = ((sig_GtkSizeRequestMode_GtkWidgetP)vu)(GTK_WIDGET(widget));
+              if(DEBUG) fprintf(stderr," %i\n",request_mode_value);
+              fprintf(pargs->fpout, "%i\n", request_mode_value);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_GtkStateFlags_GtkWidgetP,command))) { /*042*/
+              /*gtk_widget_get_state_flags*/
+              if(DEBUG) fprintf(stderr,"CALLBACK042 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
+              GtkStateFlags flags_value = ((sig_GtkStateFlags_GtkWidgetP)vu)(GTK_WIDGET(widget));
+              if(DEBUG) fprintf(stderr," %i\n",flags_value);
+              fprintf(pargs->fpout, "%i\n", flags_value);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_GtkStyleContextP_GtkWidgetP,command))) { /*043*/} else
+          if(NULL != (vu=table_get(table_GtkTextDirection_GtkWidgetP,command))) { /*044*/
+              /*gtk_widget_get_direction*/
+              if(DEBUG) fprintf(stderr,"CALLBACK044 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
+              GtkTextDirection direction_value = ((sig_GtkTextDirection_GtkWidgetP)vu)(GTK_WIDGET(widget));
+              if(DEBUG) fprintf(stderr," %i\n",direction_value);
+              fprintf(pargs->fpout, "%i\n", direction_value);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_GtkTextDirection_void,command))) { /*045*/
+              if(DEBUG) fprintf(stderr,"CALLBACK045 %s, widget_id: %s, argument: %s value:",command,widget_id,operanda);
+              GtkTextDirection direction_value = ((sig_GtkTextDirection_void)vu)();
+              if(DEBUG) fprintf(stderr," %i\n",direction_value);
+              fprintf(pargs->fpout, "%i\n", direction_value);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_GtkWidgetP_GtkWidgetP,command))) { /*046*/} else
+          if(NULL != (vu=table_get(table_GtkWidgetP_GtkWidgetP_double_double_GtkPickFlags,command))) { /*047*/} else
+          if(NULL != (vu=table_get(table_GtkWidgetP_GtkWidgetP_GType,command))) { /*048*/} else
+          if(NULL != (vu=table_get(table_GtkWidgetP_GtkWindowP,command))) { /*049*/} else
+          #if GTK_MINOR_VERSION >= 20
+            if(NULL != (vu=table_get(table_GtkWindowGravity_GtkWindowP,command))) { /*118*/
+              if(DEBUG) fprintf(stderr,"CALLBACK118 %s, widget_id: %s value:",command,widget_id);
+              GtkWindowGravity g = ((sig_GtkWindowGravity_GtkWindowP)vu)(GTK_WINDOW(widget));
+              if(DEBUG) fprintf(stderr," %i\n",g);
+              fprintf(pargs->fpout, "%i\n", g);
+              fflush(pargs->fpout);
+            } else
+          #endif
+          if(NULL != (vu=table_get(table_GtkWindowGroupP_GtkWindowP,command))) { /*050*/} else
+          if(NULL != (vu=table_get(table_GtkWindowP_GtkWindowP,command))) { /*051*/} else
+          if(NULL != (vu=table_get(table_GType_GtkWidgetClassP,command))) { /*052*/
+              /*gtk_widget_class_get_layout_manager_type*/
+              if(DEBUG) fprintf(stderr,"CALLBACK052 %s, widget_id: %s value:",command,widget_id);
+              GType type_value = ((sig_GType_GtkWidgetClassP)vu)(GTK_WIDGET_GET_CLASS(widget));
+              if(DEBUG) fprintf(stderr," %i\n",type_value);
+              fprintf(pargs->fpout, "%s\n", type_value);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_guint_GtkWidgetClassP,command))) { /*053*/
+              /*gtk_widget_class_get_activate_signal*/
+              if(DEBUG) fprintf(stderr,"CALLBACK053 %s, widget_id: %s value:",command,widget_id);
+              guint ivalue = ((sig_guint_GtkWidgetClassP)vu)(GTK_WIDGET_GET_CLASS(widget));
+              if(DEBUG) fprintf(stderr," %i\n",ivalue);
+              fprintf(pargs->fpout, "%s\n", ivalue);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_guint_GtkWidgetP_GtkTickCallback_gpointer_GDestroyNotify,command))) { /*054*/} else
+          if(NULL != (vu=table_get(table_int_GtkWidgetP,command))) { /*055*/
+              /*e.g. gtk_widget_get_width*/
+              if(DEBUG) fprintf(stderr,"CALLBACK055 %s, widget_id: %s value:",command,widget_id);
+              int ivalue = ((sig_int_GtkWidgetP)vu)(GTK_WIDGET(widget));
+              if(DEBUG) fprintf(stderr," %i\n",ivalue);
+              fprintf(pargs->fpout, "%s\n", ivalue);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_int_GtkWidgetP_GtkOrientation,command))) { /*056*/
+              /*gtk_widget_get_size*/
+              if(DEBUG) fprintf(stderr,"CALLBACK056 %s, widget_id: %s argument: %s value:",command,widget_id,operanda);
+              GtkOrientation i_arg=atoi(operanda);
+              int ivalue = ((sig_int_GtkWidgetP_GtkOrientation)vu)(GTK_WIDGET(widget),i_arg);
+              if(DEBUG) fprintf(stderr," %i\n",ivalue);
+              fprintf(pargs->fpout, "%s\n", ivalue);
+              fflush(pargs->fpout);
+          } else
+          if(NULL != (vu=table_get(table_PangoContextP_GtkWidgetP,command))) { /*057*/} else
+          if(NULL != (vu=table_get(table_PangoFontMapP_GtkWidgetP,command))) { /*058*/} else
+          if(NULL != (vu=table_get(table_PangoLayoutP_GtkWidgetP_constcharP,command))) { /*059*/} else
+          if(NULL != (vu=table_get(table_void_constcharP,command))) { /*060*/
+              if(DEBUG) fprintf(stderr,"CALLBACK060 %s, argument: %s\n",command,operanda);
+              ((sig_void_constcharP)vu)(operanda);
+          } else
+          if(NULL != (vu=table_get(table_void_gboolean,command))) { /*061*/
+              if(DEBUG) fprintf(stderr,"CALLBACK061 %s, argument: %s\n",command,operanda);
+              gboolean b = atoi(operanda);
+              ((sig_void_gboolean)vu)(b);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkTextDirection,command))) { /*062*/
+              if(DEBUG) fprintf(stderr,"CALLBACK062 %s, argument: %s\n",command,operanda);
+              GtkTextDirection d = atoi(operanda);
+              ((sig_void_GtkTextDirection)vu)(d);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_constcharP,command))) { /*063*/
+              if(DEBUG) fprintf(stderr,"CALLBACK063 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
+              ((sig_void_GtkWidgetClassP_constcharP)vu)(GTK_WIDGET_GET_CLASS(widget), operanda);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_constcharP_constcharP,command))) { /*064*/
+              if(DEBUG) fprintf(stderr,"CALLBACK064 %s, widget_id: %s argument1: %s argument2: %s\n",command,widget_id,operanda, operandb);
+              ((sig_void_GtkWidgetClassP_constcharP_constcharP)vu)(GTK_WIDGET_GET_CLASS(widget), operanda, operandb);
+          } else    
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_constcharP_constcharP_GtkWidgetActionActivateFunc,command))) { /*065*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_constcharP_gboolean_gssize,command))) { /*066*/
+              if(DEBUG) fprintf(stderr,"CALLBACK066 %s, widget_id: %s argument1: %s argument2: %s argument3: %s\n",command,widget_id,operanda, operandb, operandc);
+              gboolean b = atoi(operandb);
+              int i = atoi(operandc);
+              ((sig_void_GtkWidgetClassP_constcharP_gboolean_gssize)vu)(GTK_WIDGET_GET_CLASS(widget), operanda, b,i);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_constcharP_GCallback,command))) { /*067*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_GBytesP,command))) { /*068*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_GtkAccessibleRole,command))) { /*069*/
+              if(DEBUG) fprintf(stderr,"CALLBACK069 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
+              int i = atoi(operanda);
+              ((sig_void_GtkWidgetClassP_GtkAccessibleRole)vu)(GTK_WIDGET_GET_CLASS(widget), i);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_GtkBuilderScopeP,command))) { /*070*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_GtkShortcutP,command))) { /*071*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_GType,command))) { /*072*/
+              if(DEBUG) fprintf(stderr,"CALLBACK072 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
+              GType i = atoi(operanda);
+              ((sig_void_GtkWidgetClassP_GType)vu)(GTK_WIDGET_GET_CLASS(widget), i);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_guint,command))) { /*073*/
+              if(DEBUG) fprintf(stderr,"CALLBACK073 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
+              guint i = atoi(operanda);
+              ((sig_void_GtkWidgetClassP_guint)vu)(GTK_WIDGET_GET_CLASS(widget), i);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_guint_GdkModifierType_constcharP_constcharP_Elipse,command))) { /*074*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetClassP_guint_GdkModifierType_GtkShortcutFunc_constcharP_Elipse,command))) { /*075*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP,command))) { /*076*/
+              if(DEBUG) fprintf(stderr,"CALLBACK076 %s, widget_id: %s\n",command,widget_id);
+              ((sig_void_GtkWidgetP)vu)(GTK_WIDGET(widget));
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_constcairo_font_options_tP,command))) { /*077*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_constcharP,command))) { /*078*/
+              if(DEBUG) fprintf(stderr,"CALLBACK078 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
+              ((sig_void_GtkWidgetP_constcharP)vu)(GTK_WIDGET(widget), operanda);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_constcharP_GActionGroupP,command))) { /*079*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_constcharP_gboolean,command))) { /*080*/
+              if(DEBUG) fprintf(stderr,"CALLBACK078 %s, widget_id: %s argument1: %s argument2: %s\n",command,widget_id,operanda,operandb);
+              gboolean b = atoi(operanda);
+              ((sig_void_GtkWidgetP_constcharP_gboolean)vu)(GTK_WIDGET(widget), operanda,b);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_constcharPP,command))) { /*081*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_constGtkAllocationP_int,command))) { /*082*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_double,command))) { /*083*/
+              if(DEBUG) fprintf(stderr,"CALLBACK083 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
+              double d = atof(operanda);
+              ((sig_void_GtkWidgetP_double)vu)(GTK_WIDGET(widget), d);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_gboolean,command))) { /*084*/
+              if(DEBUG) fprintf(stderr,"CALLBACK084 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
+              gboolean b = atoi(operanda);
+              ((sig_void_GtkWidgetP_gboolean)vu)(GTK_WIDGET(widget), b);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GdkCursorP,command))) { /*085*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GdkRGBA,command))) { /*086*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkAlign,command))) { /*087*/
+              if(DEBUG) fprintf(stderr,"CALLBACK087 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
+              GtkAlign a = atoi(operanda);
+              ((sig_void_GtkWidgetP_GtkAlign)vu)(GTK_WIDGET(widget), a);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkAllocationP,command))) { /*088*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkEventControllerP,command))) { /*089*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkLayoutManagerP,command))) { /*090*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkOrientation_int_intP_intP_intP_intP,command))) { /*091*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkOverflow,command))) { /*092*/
+              if(DEBUG) fprintf(stderr,"CALLBACK092 %s, widget_id: %s argument: %s\n",command,widget_id,operanda);
+              GtkOverflow o = atoi(operanda);
+              ((sig_void_GtkWidgetP_GtkOverflow)vu)(GTK_WIDGET(widget), o);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkRequisitionP_GtkRequisitionP,command))) { /*093*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkStateFlags,command))) { /*094*/
+              if(DEBUG) fprintf(stderr,"CALLBACK095 %s, widget_id: %s argument: %s \n",command,widget_id,operanda);
+              GtkStateFlags f = atoi(operanda);
+              ((sig_void_GtkWidgetP_GtkStateFlags)vu)(GTK_WIDGET(widget), f);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkStateFlags_gboolean,command))) { /*095*/
+              if(DEBUG) fprintf(stderr,"CALLBACK095 %s, widget_id: %s argument1: %s argument2: %s\n",command,widget_id,operanda,operandb);
+              GtkStateFlags f = atoi(operanda);
+              gboolean b = atoi(operandb);
+              ((sig_void_GtkWidgetP_GtkStateFlags_gboolean)vu)(GTK_WIDGET(widget), f,b);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkTextDirection,command))) { /*096*/
+              if(DEBUG) fprintf(stderr,"CALLBACK096 %s, widget_id: %s argument: %s \n",command,widget_id,operanda);
+              GtkTextDirection td = atoi(operanda);
+              ((sig_void_GtkWidgetP_GtkTextDirection)vu)(GTK_WIDGET(widget), td);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkWidgetP,command))) { /*097*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkWidgetP_GtkSnapshotP,command))) { /*098*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GtkWidgetP_GtkWidgetP,command))) { /*099*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_GType,command))) { /*100*/
+              if(DEBUG) fprintf(stderr,"CALLBACK096 %s, widget_id: %s argument: %s \n",command,widget_id,operanda);
+              GType t = atoi(operanda);
+              ((sig_void_GtkWidgetP_GType)vu)(GTK_WIDGET(widget), t);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_guint,command))) { /*101*/
+              if(DEBUG) fprintf(stderr,"CALLBACK096 %s, widget_id: %s argument: %s \n",command,widget_id,operanda);
+              guint i = atoi(operanda);
+              ((sig_void_GtkWidgetP_guint)vu)(GTK_WIDGET(widget), i);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_int,command))) { /*102*/
+              if(DEBUG) fprintf(stderr,"CALLBACK096 %s, widget_id: %s argument: %s \n",command,widget_id,operanda);
+              int i = atoi(operanda);
+              ((sig_void_GtkWidgetP_int)vu)(GTK_WIDGET(widget), i);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_int_int,command))) { /*103*/
+              if(DEBUG) fprintf(stderr,"CALLBACK096 %s, widget_id: %s argument1: %s argument2: %s \n",command,widget_id,operanda,operandb);
+              int i1 = atoi(operanda);
+              int i2 = atoi(operandb);
+              ((sig_void_GtkWidgetP_int_int)vu)(GTK_WIDGET(widget), i1, i2);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_int_int_int_GskTransformP,command))) { /*104*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_intP_intP,command))) { /*105*/} else
+          if(NULL != (vu=table_get(table_void_GtkWidgetP_PangoFontMapP,command))) { /*106*/} else
+          if(NULL != (vu=table_get(table_void_GtkWindowP,command))) { /*107*/
+              if(DEBUG) fprintf(stderr,"CALLBACK107 %s, widget_id: %s\n",command,widget_id);
+              ((sig_void_GtkWindowP)vu)(GTK_WINDOW(widget));
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWindowP_constcharP,command))) { /*108*/
+              if(DEBUG) fprintf(stderr,"CALLBACK108 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+              ((sig_void_GtkWindowP_constcharP)vu)(GTK_WINDOW(widget),operanda);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWindowP_gboolean,command))) { /*109*/
+              if(DEBUG) fprintf(stderr,"CALLBACK109 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+              gboolean b = (int) strtol(operanda, (char **)NULL, 10) == 0 ? FALSE : TRUE;
+              ((sig_void_GtkWindowP_gboolean)vu)(GTK_WINDOW(widget),b);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWindowP_GdkDisplayP,command))) { /*110*/} else
+          if(NULL != (vu=table_get(table_void_GtkWindowP_GdkMonitorP,command))) { /*111*/} else
+          if(NULL != (vu=table_get(table_void_GtkWindowP_GtkApplicationP,command))) { /*112*/} else
+          if(NULL != (vu=table_get(table_void_GtkWindowP_GtkWidgetP,command))) { /*113*/} else
+          #if GTK_MINOR_VERSION >= 20
+            if(NULL != (vu=table_get(table_void_GtkWindowP_GtkWindowGravity,command))) { /*119*/ 
+              if(DEBUG) fprintf(stderr,"CALLBACK119 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+              GtkWindowGravity g = (int) strtol(operanda, (char **)NULL, 10);
+              ((sig_void_GtkWindowP_GtkWindowGravity)vu)(GTK_WINDOW(widget),g);
+            } else
+          #endif
+          if(NULL != (vu=table_get(table_void_GtkWindowP_GtkWindowP,command))) { /*114*/} else
+          if(NULL != (vu=table_get(table_void_GtkWindowP_guint32,command))) { /*115*/
+              if(DEBUG) fprintf(stderr,"CALLBACK115 %s, widget_id: %s, argument: %s\n",command,widget_id,operanda);
+              guint32 i = (int) strtol(operanda, (char **)NULL, 10);
+              ((sig_void_GtkWindowP_guint32)vu)(GTK_WINDOW(widget),i);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWindowP_int_int,command))) { /*116*/
+              if(DEBUG) fprintf(stderr,"CALLBACK116 %s, widget_id: %s, argument1: %s, argument2: %s\n",command,widget_id,operanda, operandb);
+              int x = (int) strtol(operanda, (char **)NULL, 10);
+              int y = (int) strtol(operandb, (char **)NULL, 10);
+              ((sig_void_GtkWindowP_int_int)vu)(GTK_WINDOW(widget),x,y);
+          } else
+          if(NULL != (vu=table_get(table_void_GtkWindowP_intP_intP,command))) { /*117*/
+              if(DEBUG) fprintf(stderr,"CALLBACK117 %s, widget_id: %s\n",command,widget_id);
+              int x, y;
+              ((sig_void_GtkWindowP_intP_intP)vu)(GTK_WINDOW(widget),&x, &y);
+              fprintf(pargs->fpout, "%i\n", x);
+              fprintf(pargs->fpout, "%i\n", y);
+              fflush(pargs->fpout);
+          } else /*118 vergeben*//*119 vergeben*/
+        //
+        // Legacy Aufrufe
+          if(!strcmp(command, "set_textview_text")) {
+              gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), operanda, -1); 
+          } else
+          if(!strcmp(command, "get_textview_text")) {
+              GtkTextIter a, b;
+              GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)); 
+              gtk_text_buffer_get_iter_at_offset(buffer, &a, 0);
+              gtk_text_buffer_get_iter_at_offset(buffer, &b, -1);
+              gchar* mtext = gtk_text_buffer_get_text(buffer, &a, &b, FALSE);
+              fprintf(pargs->fpout, "%s\n", mtext);  
+              fflush(pargs->fpout);
+          } else
+          if(!strcmp(command, "set_label_text")) {
+              gtk_label_set_text(GTK_LABEL(widget), operanda);
+          } else
+          if(!strcmp(command, "gtk_editable_get_text")) {
+              const char* mtext=gtk_editable_get_text(GTK_EDITABLE(widget));
+              fprintf(pargs->fpout, "%s\n", mtext);  
+              fflush(pargs->fpout);
+          }
 
     }
 
@@ -1156,6 +1135,7 @@ void *wrap_reader_loop(void* user_data) {
     pthread_exit(NULL);
 }
 void wrap_add_signals(char *filename, _args* pargs) {
+    // wrap_add_signals von: https://github.com/abecadel/gtkwrap
     if(DEBUG) fprintf(stderr, "START %s()...\n", __func__);
     //Adding signals handled in glade file
     //TODO: make less dumb, replace by real xml parser
@@ -1287,7 +1267,6 @@ static void add_css(_args *pargs, GtkApplicationWindow *appwin) {
     add_styles(pargs);
     g_object_unref(provider);
 }
-
 static void app_query_end(GtkApplication *app, gpointer *user_data) { 
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
@@ -1593,7 +1572,9 @@ int main(int argc, char **argv) {
     g_signal_connect(app, "open", G_CALLBACK (app_open), &args);
     g_signal_connect(app, "shutdown", G_CALLBACK (app_shutdown), &args);
     if(DEBUG) fprintf(stderr, "MAIN:Alle Application Handler verbunden ...\n");
+
     stat = g_application_run(G_APPLICATION(app), argc, argv);
+
     if(DEBUG) fprintf(stderr, "ENDE App läuft nicht mehr ...\n");
     g_object_unref(app);
     return stat;
