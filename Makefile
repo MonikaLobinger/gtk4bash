@@ -11,7 +11,7 @@ build: gtk4bash
 gtk4bash : out/gtk4bash.o
 	${CC} ${LFLAGS} -o gtk4bash out/gtk4bash.o ${LIBS}
 
-out/gtk4bash.o : gtk4bash.c
+out/gtk4bash.o : gtk4bash.c gtk4bash.h
 	${CC} ${CFLAGS} ${INCLUDES} -o out/gtk4bash.o gtk4bash.c 
 
 clean :

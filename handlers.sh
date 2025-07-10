@@ -11,14 +11,21 @@ on_button_gtk_window_get_default_icon_name_clicked(){
     val=
     echo "gtk_window_get_default_icon_name"
     read val < $OUT
-    echo " set_label_text  result  $val"
+    echo " gtk_label_set_text  result  $val"
 } > $IN
 
 on_button_gtk_widget_get_name_clicked(){
     val=
     echo "gtk_widget_get_name gtk_widget_get_name"
     read val < $OUT
-    echo "set_label_text result $val"
+    echo "gtk_label_set_text result $val"
+} > $IN
+
+on_button_gtk_label_get_lines_clicked(){
+    val=
+    echo "gtk_label_get_lines result"
+    read val < $OUT
+    echo "gtk_label_set_text result $val"
 } > $IN
 
 on_button_gtk_window_set_auto_startup_notification_clicked() {
@@ -29,7 +36,7 @@ on_button_gtk_window_get_set_title_clicked(){
     val=
     echo "|gtk_window_get_title|win1"
     read val < $OUT
-    echo "|set_label_text|result|$val"
+    echo "|gtk_label_set_text|result|$val"
     echo "|gtk_window_set_title|win1|Neuer Titel"
 } > $IN
 
@@ -40,7 +47,7 @@ on_button_gtk_window_close_clicked(){
 on_button_gtk_window_toggle_fullscreen_clicked(){
     echo "gtk_window_is_fullscreen win1"
     read val < $OUT
-    echo "set_label_text result $val"
+    echo "gtk_label_set_text result $val"
     if (( val )); then
         echo "gtk_window_unfullscreen win1"
     else
@@ -51,7 +58,7 @@ on_button_gtk_window_toggle_fullscreen_clicked(){
 on_button_gtk_window_toggle_maximize_clicked(){
     echo "gtk_window_is_maximized win1"
     read val < $OUT
-    echo "set_label_text result $val"
+    echo "gtk_label_set_text result $val"
     if (( val )); then
         echo "gtk_window_unmaximize win1"
     else

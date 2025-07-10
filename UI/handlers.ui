@@ -15,6 +15,7 @@
             <style>
               <class name="show"/>
             </style>
+            <property name="lines">12</property>
             <property name="label">WERT</property>
           </object>
         </child>
@@ -28,6 +29,12 @@
           <object class="GtkButton" id="gtk_widget_get_name">
             <property name="label">gtk_widget_get_name</property>
             <signal name="clicked" handler="on_button_gtk_widget_get_name_clicked"/>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="gtk_label_get_lines">
+            <property name="label">gtk_label_get_lines</property>
+            <signal name="clicked" handler="on_button_gtk_label_get_lines_clicked"/>
           </object>
         </child>
         <child>
