@@ -151,6 +151,7 @@ void *wrap_reader_loop(void* user_data) {
       typedef double(*sig_double_GtkWidgetP)(GtkWidget*);
       TS_DEF_float_gtknameP(GtkLabel/*gtkname*/)
       TS_DEF_gboolean_gtknameP(GtkLabel/*gtkname*/)
+      TS_DEF_gboolean_gtknameP(GtkTextView/*gtkname*/)
       TS_DEF_gboolean_gtknameP(GtkWidget/*gtkname*/)
       TS_DEF_gboolean_gtknameP(GtkWindow/*gtkname*/)
       FUS* table_gboolean_GtkWidgetClassP_guint_GTypeP_constcharPP_constGVariantTypePP_constcharPP=table_new();
@@ -206,6 +207,7 @@ void *wrap_reader_loop(void* user_data) {
       FUS* table_GtkApplication_GtkWindowP=table_new();       // GtkApplication* GtkWindow*
       typedef GtkApplication*(*sig_GtkApplication_GtkWindowP)(GtkWindow*);  
       TS_DEF_GtkJustification_gtknameP(GtkLabel/*gtkname*/);
+      TS_DEF_GtkJustification_gtknameP(GtkTextView/*gtkname*/);
       FUS* table_GtkLayoutManagerP_GtkWidgetP=table_new();
       typedef GtkLayoutManager*(*sig_GtkLayoutManagerP_GtkWidgetP)(GtkWidget*);
       FUS* table_GtkNativeP_GtkWidgetP=table_new();
@@ -250,6 +252,7 @@ void *wrap_reader_loop(void* user_data) {
       FUS* table_guint_GtkWidgetP_GtkTickCallback_gpointer_GDestroyNotify=table_new();
       typedef guint(*sig_guint_GtkWidgetP_GtkTickCallback_gpointer_GDestroyNotify)(GtkWidget*,GtkTickCallback,gpointer,GDestroyNotify);
       TS_DEF_int_gtknameP(GtkLabel/*gtkname*/)
+      TS_DEF_int_gtknameP(GtkTextView/*gtkname*/)
       TS_DEF_int_gtknameP(GtkWidget/*gtkname*/)
       FUS* table_int_GtkWidgetP_GtkOrientation=table_new();
       typedef int(*sig_int_GtkWidgetP_GtkOrientation)(GtkWidget*,GtkOrientation);
@@ -276,13 +279,16 @@ void *wrap_reader_loop(void* user_data) {
       TS_DEF_void_gtknameP_double(GtkWidget/*gtkname*/)
       TS_DEF_void_gtknameP_float(GtkLabel/*gtkname*/)
       TS_DEF_void_gtknameP_gboolean(GtkLabel/*gtkname*/)
+      TS_DEF_void_gtknameP_gboolean(GtkTextView/*gtkname*/)
       TS_DEF_void_gtknameP_gboolean(GtkWidget/*gtkname*/)
       TS_DEF_void_gtknameP_gboolean(GtkWindow/*gtkname*/)
       TS_DEF_void_gtknameP_GtkJustification(GtkLabel/*gtkname*/)
+      TS_DEF_void_gtknameP_GtkJustification(GtkTextView/*gtkname*/)
       TS_DEF_void_gtknameP_GtkNaturalWrapMode(GtkLabel/*gtkname*/)
       TS_DEF_void_gtknameP_guint(GtkWidgetClass/*gtkname*/)
       TS_DEF_void_gtknameP_guint(GtkWidget/*gtkname*/)
       TS_DEF_void_gtknameP_int(GtkLabel/*gtkname*/)
+      TS_DEF_void_gtknameP_int(GtkTextView/*gtkname*/)
       TS_DEF_void_gtknameP_int(GtkWidget/*gtkname*/)
       TS_DEF_void_gtknameP_PangoEllipsizeMode(GtkLabel/*gtkname*/)
       TS_DEF_void_gtknameP_PangoWrapMode(GtkLabel/*gtkname*/)
@@ -704,55 +710,131 @@ void *wrap_reader_loop(void* user_data) {
           // void keys_changed (GtkWindow* window)
       /* GtkLabel ***************************************************0201-0299*/
         /* Instance methods */
-        // PangoAttrList *gtk_label_get_attributes (GtkLabel *self);
-        table_add(table_constcharP_GtkLabelP,"gtk_label_get_current_uri",gtk_label_get_current_uri);
-        table_add(table_PangoEllipsizeMode_GtkLabelP,"gtk_label_get_ellipsize",gtk_label_get_ellipsize);
-        // GMenuModel * gtk_label_get_extra_menu (GtkLabel *self);
-        table_add(table_GtkJustification_GtkLabelP,"gtk_label_get_justify",gtk_label_get_justify);
-        table_add(table_constcharP_GtkLabelP,"gtk_label_get_label",gtk_label_get_label);
-        // PangoLayout *gtk_label_get_layout (GtkLabel *self);
-        // void gtk_label_get_layout_offsets (GtkLabel *self, int *x, int *y);
-        table_add(table_int_GtkLabelP,"gtk_label_get_lines",gtk_label_get_lines);
-        table_add(table_int_GtkLabelP,"gtk_label_get_max_width_chars",gtk_label_get_max_width_chars);
-        table_add(table_guint_GtkLabelP,"gtk_label_get_mnemonic_keyval",gtk_label_get_mnemonic_keyval);
-        // GtkWidget *gtk_label_get_mnemonic_widget (GtkLabel *self);
-        table_add(table_GtkNaturalWrapMode_GtkLabelP,"gtk_label_get_natural_wrap_mode",gtk_label_get_natural_wrap_mode);
-        table_add(table_gboolean_GtkLabelP,"gtk_label_get_selectable",gtk_label_get_selectable);
-        table_add(table_gboolean_GtkLabelP,"gtk_label_get_selection_bounds",gtk_label_get_selection_bounds);
-        table_add(table_gboolean_GtkLabelP,"gtk_label_get_single_line_mode",gtk_label_get_single_line_mode);
-        // PangoTabArray * gtk_label_get_tabs (GtkLabel *self);
-        table_add(table_constcharP_GtkLabelP,"gtk_label_get_text",gtk_label_get_text);
-        table_add(table_gboolean_GtkLabelP,"gtk_label_get_use_markup",gtk_label_get_use_markup);
-        table_add(table_gboolean_GtkLabelP,"gtk_label_get_use_underline",gtk_label_get_use_underline);
-        table_add(table_int_GtkLabelP,"gtk_label_get_width_chars",gtk_label_get_width_chars);
-        table_add(table_gboolean_GtkLabelP,"gtk_label_get_wrap",gtk_label_get_wrap);
-        table_add(table_PangoWrapMode_GtkLabelP,"gtk_label_get_wrap_mode",gtk_label_get_wrap_mode);
-        table_add(table_float_GtkLabelP,"gtk_label_get_xalign",gtk_label_get_xalign);
-        table_add(table_float_GtkLabelP,"gtk_label_get_yalign",gtk_label_get_yalign);
-        // void gtk_label_select_region (GtkLabel *self, int start_offset, int end_offset);
-        // void gtk_label_set_attributes (GtkLabel *self, PangoAttrList *attrs);
-        table_add(table_void_GtkLabelP_PangoEllipsizeMode,"gtk_label_set_ellipsize",gtk_label_set_ellipsize);
-        // void gtk_label_set_extra_menu (GtkLabel *self, GMenuModel *model);
-        table_add(table_void_GtkLabelP_GtkJustification,"gtk_label_set_justify",gtk_label_set_justify);
-        table_add(table_void_GtkLabelP_constcharP,"gtk_label_set_label",gtk_label_set_label);
-        table_add(table_void_GtkLabelP_int,"gtk_label_set_lines",gtk_label_set_lines);
-        table_add(table_void_GtkLabelP_constcharP,"gtk_label_set_markup",gtk_label_set_markup);
-        table_add(table_void_GtkLabelP_constcharP,"gtk_label_set_markup_with_mnemonic",gtk_label_set_markup_with_mnemonic);
-        table_add(table_void_GtkLabelP_int,"gtk_label_set_max_width_chars",gtk_label_set_max_width_chars);
-        // void gtk_label_set_mnemonic_widget (GtkLabel *self, GtkWidget *widget);
-        table_add(table_void_GtkLabelP_GtkNaturalWrapMode,"gtk_label_set_natural_wrap_mode",gtk_label_set_natural_wrap_mode);
-        table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_selectable",gtk_label_set_selectable);
-        table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_single_line_mode",gtk_label_set_single_line_mode);
-        // void gtk_label_set_tabs (GtkLabel *self, PangoTabArray *tabs);
-        table_add(table_void_GtkLabelP_constcharP,"gtk_label_set_text",gtk_label_set_text);
-        table_add(table_void_GtkLabelP_constcharP,"gtk_label_set_text_with_mnemonic",gtk_label_set_text_with_mnemonic);
-        table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_use_markup",gtk_label_set_use_markup);
-        table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_use_underline",gtk_label_set_use_underline);
-        table_add(table_void_GtkLabelP_int,"gtk_label_set_width_chars",gtk_label_set_width_chars);
-        table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_wrap",gtk_label_set_wrap);
-        table_add(table_void_GtkLabelP_PangoWrapMode,"gtk_label_set_wrap_mode",gtk_label_set_wrap_mode);
-        table_add(table_void_GtkLabelP_float,"gtk_label_set_xalign",gtk_label_set_xalign);
-        table_add(table_void_GtkLabelP_float,"gtk_label_set_yalign",gtk_label_set_yalign);
+          // PangoAttrList *gtk_label_get_attributes (GtkLabel *self);
+          table_add(table_constcharP_GtkLabelP,"gtk_label_get_current_uri",gtk_label_get_current_uri);
+          table_add(table_PangoEllipsizeMode_GtkLabelP,"gtk_label_get_ellipsize",gtk_label_get_ellipsize);
+          // GMenuModel * gtk_label_get_extra_menu (GtkLabel *self);
+          table_add(table_GtkJustification_GtkLabelP,"gtk_label_get_justify",gtk_label_get_justify);
+          table_add(table_constcharP_GtkLabelP,"gtk_label_get_label",gtk_label_get_label);
+          // PangoLayout *gtk_label_get_layout (GtkLabel *self);
+          // void gtk_label_get_layout_offsets (GtkLabel *self, int *x, int *y);
+          table_add(table_int_GtkLabelP,"gtk_label_get_lines",gtk_label_get_lines);
+          table_add(table_int_GtkLabelP,"gtk_label_get_max_width_chars",gtk_label_get_max_width_chars);
+          table_add(table_guint_GtkLabelP,"gtk_label_get_mnemonic_keyval",gtk_label_get_mnemonic_keyval);
+          // GtkWidget *gtk_label_get_mnemonic_widget (GtkLabel *self);
+          table_add(table_GtkNaturalWrapMode_GtkLabelP,"gtk_label_get_natural_wrap_mode",gtk_label_get_natural_wrap_mode);
+          table_add(table_gboolean_GtkLabelP,"gtk_label_get_selectable",gtk_label_get_selectable);
+          table_add(table_gboolean_GtkLabelP,"gtk_label_get_selection_bounds",gtk_label_get_selection_bounds);
+          table_add(table_gboolean_GtkLabelP,"gtk_label_get_single_line_mode",gtk_label_get_single_line_mode);
+          // PangoTabArray * gtk_label_get_tabs (GtkLabel *self);
+          table_add(table_constcharP_GtkLabelP,"gtk_label_get_text",gtk_label_get_text);
+          table_add(table_gboolean_GtkLabelP,"gtk_label_get_use_markup",gtk_label_get_use_markup);
+          table_add(table_gboolean_GtkLabelP,"gtk_label_get_use_underline",gtk_label_get_use_underline);
+          table_add(table_int_GtkLabelP,"gtk_label_get_width_chars",gtk_label_get_width_chars);
+          table_add(table_gboolean_GtkLabelP,"gtk_label_get_wrap",gtk_label_get_wrap);
+          table_add(table_PangoWrapMode_GtkLabelP,"gtk_label_get_wrap_mode",gtk_label_get_wrap_mode);
+          table_add(table_float_GtkLabelP,"gtk_label_get_xalign",gtk_label_get_xalign);
+          table_add(table_float_GtkLabelP,"gtk_label_get_yalign",gtk_label_get_yalign);
+          // void gtk_label_select_region (GtkLabel *self, int start_offset, int end_offset);
+          // void gtk_label_set_attributes (GtkLabel *self, PangoAttrList *attrs);
+          table_add(table_void_GtkLabelP_PangoEllipsizeMode,"gtk_label_set_ellipsize",gtk_label_set_ellipsize);
+          // void gtk_label_set_extra_menu (GtkLabel *self, GMenuModel *model);
+          table_add(table_void_GtkLabelP_GtkJustification,"gtk_label_set_justify",gtk_label_set_justify);
+          table_add(table_void_GtkLabelP_constcharP,"gtk_label_set_label",gtk_label_set_label);
+          table_add(table_void_GtkLabelP_int,"gtk_label_set_lines",gtk_label_set_lines);
+          table_add(table_void_GtkLabelP_constcharP,"gtk_label_set_markup",gtk_label_set_markup);
+          table_add(table_void_GtkLabelP_constcharP,"gtk_label_set_markup_with_mnemonic",gtk_label_set_markup_with_mnemonic);
+          table_add(table_void_GtkLabelP_int,"gtk_label_set_max_width_chars",gtk_label_set_max_width_chars);
+          // void gtk_label_set_mnemonic_widget (GtkLabel *self, GtkWidget *widget);
+          table_add(table_void_GtkLabelP_GtkNaturalWrapMode,"gtk_label_set_natural_wrap_mode",gtk_label_set_natural_wrap_mode);
+          table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_selectable",gtk_label_set_selectable);
+          table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_single_line_mode",gtk_label_set_single_line_mode);
+          // void gtk_label_set_tabs (GtkLabel *self, PangoTabArray *tabs);
+          table_add(table_void_GtkLabelP_constcharP,"gtk_label_set_text",gtk_label_set_text);
+          table_add(table_void_GtkLabelP_constcharP,"gtk_label_set_text_with_mnemonic",gtk_label_set_text_with_mnemonic);
+          table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_use_markup",gtk_label_set_use_markup);
+          table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_use_underline",gtk_label_set_use_underline);
+          table_add(table_void_GtkLabelP_int,"gtk_label_set_width_chars",gtk_label_set_width_chars);
+          table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_wrap",gtk_label_set_wrap);
+          table_add(table_void_GtkLabelP_PangoWrapMode,"gtk_label_set_wrap_mode",gtk_label_set_wrap_mode);
+          table_add(table_void_GtkLabelP_float,"gtk_label_set_xalign",gtk_label_set_xalign);
+          table_add(table_void_GtkLabelP_float,"gtk_label_set_yalign",gtk_label_set_yalign);
+      /* GtkTextView ************************************************0301-0399*/
+        /* Instance methods */
+          // GType gtk_text_view_get_type (void) G_GNUC_CONST;
+          // GtkWidget * gtk_text_view_new (void);
+          // GtkWidget * gtk_text_view_new_with_buffer (GtkTextBuffer *buffer);
+          // void gtk_text_view_set_buffer (GtkTextView *text_view,GtkTextBuffer *buffer);
+          // GtkTextBuffer *gtk_text_view_get_buffer (GtkTextView *text_view);
+          // gboolean gtk_text_view_scroll_to_iter (GtkTextView *text_view,GtkTextIter *iter,double within_margin,gboolean use_align,double xalign,double yalign);
+          // void gtk_text_view_scroll_to_mark (GtkTextView *text_view,GtkTextMark *mark,double within_margin,gboolean use_align,double xalign,double yalign);
+          // void gtk_text_view_scroll_mark_onscreen (GtkTextView *text_view,GtkTextMark *mark);
+          // gboolean gtk_text_view_move_mark_onscreen (GtkTextView *text_view,GtkTextMark *mark);
+          table_add(table_gboolean_GtkTextViewP,"gtk_text_view_place_cursor_onscreen",gtk_text_view_place_cursor_onscreen);
+          // void gtk_text_view_get_visible_rect (GtkTextView *text_view,GdkRectangle *visible_rect);
+          table_add(table_void_GtkTextViewP_gboolean,"gtk_text_view_set_cursor_visible",gtk_text_view_set_cursor_visible);
+          table_add(table_gboolean_GtkTextViewP,"gtk_text_view_get_cursor_visible",gtk_text_view_get_cursor_visible);
+          // void gtk_text_view_reset_cursor_blink (GtkTextView *text_view);
+          // void gtk_text_view_get_cursor_locations (GtkTextView *text_view,const GtkTextIter *iter,GdkRectangle *strong,GdkRectangle *weak);
+          // void gtk_text_view_get_iter_location (GtkTextView *text_view,const GtkTextIter *iter,GdkRectangle *location);
+          // gboolean gtk_text_view_get_iter_at_location (GtkTextView *text_view,GtkTextIter *iter,int x,int y);
+          // gboolean gtk_text_view_get_iter_at_position (GtkTextView *text_view,GtkTextIter *iter,int *trailing,int x,int y);
+          // void gtk_text_view_get_line_yrange (GtkTextView *text_view,const GtkTextIter *iter,int *y,int *height);
+          // void gtk_text_view_get_line_at_y (GtkTextView *text_view,GtkTextIter *target_iter,int y,int *line_top);
+          // void gtk_text_view_buffer_to_window_coords (GtkTextView *text_view,GtkTextWindowType win,int buffer_x,int buffer_y,int *window_x,int *window_y);
+          // void gtk_text_view_window_to_buffer_coords (GtkTextView *text_view,GtkTextWindowType win,int window_x,int window_y,int *buffer_x,int *buffer_y);
+          // gboolean gtk_text_view_forward_display_line (GtkTextView *text_view,GtkTextIter *iter);
+          // gboolean gtk_text_view_backward_display_line (GtkTextView *text_view,GtkTextIter *iter);
+          // gboolean gtk_text_view_forward_display_line_end (GtkTextView *text_view,GtkTextIter *iter);
+          // gboolean gtk_text_view_backward_display_line_start (GtkTextView *text_view,GtkTextIter *iter);
+          // gboolean gtk_text_view_starts_display_line (GtkTextView *text_view,const GtkTextIter *iter);
+          // gboolean gtk_text_view_move_visually (GtkTextView *text_view,GtkTextIter *iter,int count);
+          // gboolean gtk_text_view_im_context_filter_keypress (GtkTextView *text_view,GdkEvent *event);
+          // void gtk_text_view_reset_im_context (GtkTextView *text_view);
+          // GtkWidget *gtk_text_view_get_gutter (GtkTextView *text_view,GtkTextWindowType win);
+          // void gtk_text_view_set_gutter (GtkTextView *text_view,GtkTextWindowType win,GtkWidget *widget);
+          // void gtk_text_view_add_child_at_anchor (GtkTextView *text_view,GtkWidget *child,GtkTextChildAnchor *anchor);
+          // void gtk_text_view_add_overlay (GtkTextView *text_view,GtkWidget *child,int xpos,int ypos);
+          // void gtk_text_view_move_overlay (GtkTextView *text_view,GtkWidget *child,int xpos,int ypos);
+          // void gtk_text_view_remove (GtkTextView *text_view,GtkWidget *child);
+          // void gtk_text_view_set_wrap_mode (GtkTextView *text_view,GtkWrapMode wrap_mode);
+          // GtkWrapMode gtk_text_view_get_wrap_mode (GtkTextView *text_view);
+          table_add(table_void_GtkTextViewP_gboolean,"gtk_text_view_set_editable",gtk_text_view_set_editable);
+          table_add(table_gboolean_GtkTextViewP,"gtk_text_view_get_editable",gtk_text_view_get_editable);
+          table_add(table_void_GtkTextViewP_gboolean,"gtk_text_view_set_overwrite",gtk_text_view_set_overwrite);
+          table_add(table_gboolean_GtkTextViewP,"gtk_text_view_get_overwrite",gtk_text_view_get_overwrite);
+          table_add(table_void_GtkTextViewP_gboolean,"gtk_text_view_set_accepts_tab",gtk_text_view_set_accepts_tab);
+          table_add(table_gboolean_GtkTextViewP,"gtk_text_view_get_accepts_tab",gtk_text_view_get_accepts_tab);
+          table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_pixels_above_lines",gtk_text_view_set_pixels_above_lines);
+          table_add(table_int_GtkTextViewP,"gtk_text_view_get_pixels_above_lines",gtk_text_view_get_pixels_above_lines);
+          table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_pixels_below_lines",gtk_text_view_set_pixels_below_lines);
+          table_add(table_int_GtkTextViewP,"gtk_text_view_get_pixels_below_lines",gtk_text_view_get_pixels_below_lines);
+          table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_pixels_inside_wrap",gtk_text_view_set_pixels_inside_wrap);
+          table_add(table_int_GtkTextViewP,"gtk_text_view_get_pixels_inside_wrap",gtk_text_view_get_pixels_inside_wrap);
+          table_add(table_void_GtkTextViewP_GtkJustification,"gtk_text_view_set_justification",gtk_text_view_set_justification);
+          table_add(table_GtkJustification_GtkTextViewP,"gtk_text_view_get_justification",gtk_text_view_get_justification);
+          table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_left_margin",gtk_text_view_set_left_margin);
+          table_add(table_int_GtkTextViewP,"gtk_text_view_get_left_margin",gtk_text_view_get_left_margin);
+          table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_right_margin",gtk_text_view_set_right_margin);
+          table_add(table_int_GtkTextViewP,"gtk_text_view_get_right_margin",gtk_text_view_get_right_margin);
+          table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_top_margin",gtk_text_view_set_top_margin);
+          table_add(table_int_GtkTextViewP,"gtk_text_view_get_top_margin",gtk_text_view_get_top_margin);
+          table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_bottom_margin",gtk_text_view_set_bottom_margin);
+          table_add(table_int_GtkTextViewP,"gtk_text_view_get_bottom_margin",gtk_text_view_get_bottom_margin);
+          table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_indent",gtk_text_view_set_indent);
+          table_add(table_int_GtkTextViewP,"gtk_text_view_get_indent",gtk_text_view_get_indent);
+          // void gtk_text_view_set_tabs (GtkTextView *text_view,PangoTabArray *tabs);
+          // PangoTabArray* gtk_text_view_get_tabs (GtkTextView *text_view);
+          // void gtk_text_view_set_input_purpose (GtkTextView *text_view,GtkInputPurpose purpose);
+          // GtkInputPurpose gtk_text_view_get_input_purpose (GtkTextView *text_view);
+          // void gtk_text_view_set_input_hints (GtkTextView *text_view,GtkInputHints hints);
+          // GtkInputHints gtk_text_view_get_input_hints (GtkTextView *text_view);
+          table_add(table_void_GtkTextViewP_gboolean,"gtk_text_view_set_monospace",gtk_text_view_set_monospace);
+          table_add(table_gboolean_GtkTextViewP,"gtk_text_view_get_monospace",gtk_text_view_get_monospace);
+          // void gtk_text_view_set_extra_menu (GtkTextView *text_view,GMenuModel *model);
+          // GMenuModel * gtk_text_view_get_extra_menu (GtkTextView *text_view);
+          // PangoContext *gtk_text_view_get_rtl_context (GtkTextView *text_view);
+          // PangoContext *gtk_text_view_get_ltr_context (GtkTextView *text_view);
     //
     while(TRUE) {
         fgets(input, 1024, pargs->fpin);
@@ -811,6 +893,10 @@ void *wrap_reader_loop(void* user_data) {
               fprintf(pargs->fpout, "%f\n", dvalue);
               fflush(pargs->fpout);
           } else
+          TS_CALL_gboolean_gtknameP(GtkLabel/*gtkname*/,GTK_LABEL/*gtkcast*/,220/*nr*/)
+          TS_CALL_gboolean_gtknameP(GtkTextView/*gtkname*/,GTK_TEXT_VIEW/*gtkcast*/,160/*nr*/)
+          TS_CALL_gboolean_gtknameP(GtkWidget/*gtkname*/,GTK_WIDGET/*gtkcast*/,161/*nr*/)
+          TS_CALL_gboolean_gtknameP(GtkWindow/*gtkname*/,GTK_WINDOW/*gtkcast*/,162/*nr*/)
           TS_CALL_float_gtknameP(GtkLabel/*gtkname*/,GTK_LABEL/*gtkcast*/,202/*nr*/)
           if(NULL != (vu=table_get(table_gboolean_GtkWidgetClassP_guint_GTypeP_constcharPP_constGVariantTypePP_constcharPP,command))) { /*008*/} else
           if(NULL != (vu=table_get(table_gboolean_GtkWidgetP_constcharP,command))) { /*009*/
@@ -885,6 +971,7 @@ void *wrap_reader_loop(void* user_data) {
           } else
           if(NULL != (vu=table_get(table_GtkApplication_GtkWindowP,command))) { /*035*/} else
           TS_CALL_GtkJustification_gtknameP(GtkLabel/*gtkname*/,GTK_LABEL/*gtkcast*/,209/*nr*/)
+          TS_CALL_GtkJustification_gtknameP(GtkTextView/*gtkname*/,GTK_TEXT_VIEW/*gtkcast*/,309/*nr*/)
           if(NULL != (vu=table_get(table_GtkLayoutManagerP_GtkWidgetP,command))) { /*036*/} else
           if(NULL != (vu=table_get(table_GtkNativeP_GtkWidgetP,command))) { /*037*/} else
           TS_CALL_GtkNaturalWrapMode_gtknameP(GtkLabel/*gtkname*/,GTK_LABEL/*gtkcast*/,208/*nr*/)
@@ -957,6 +1044,7 @@ void *wrap_reader_loop(void* user_data) {
           TS_CALL_guint_gtknameP(GtkWidgetClass/*gtkname*/,GTK_WIDGET_GET_CLASS/*gtkcast*/,53/*nr*/)
           if(NULL != (vu=table_get(table_guint_GtkWidgetP_GtkTickCallback_gpointer_GDestroyNotify,command))) { /*054*/} else
           TS_CALL_int_gtknameP(GtkLabel/*gtkname*/,GTK_LABEL/*gtkcast*/,204/*nr*/)
+          TS_CALL_int_gtknameP(GtkTextView/*gtkname*/,GTK_TEXT_VIEW/*gtkcast*/,304/*nr*/)
           TS_CALL_int_gtknameP(GtkWidget/*gtkname*/,GTK_WIDGET/*gtkcast*/,55/*nr*/)
           if(NULL != (vu=table_get(table_int_GtkWidgetP_GtkOrientation,command))) { /*056*/
               /*gtk_widget_get_size*/
@@ -995,13 +1083,16 @@ void *wrap_reader_loop(void* user_data) {
           TS_CALL_void_gtknameP_double(GtkWidget,GTK_WIDGET,83)
           TS_CALL_void_gtknameP_float(GtkLabel,GTK_LABEL,205)
           TS_CALL_void_gtknameP_gboolean(GtkLabel,GTK_LABEL,206)
+          TS_CALL_void_gtknameP_gboolean(GtkTextView,GTK_TEXT_VIEW,306)
           TS_CALL_void_gtknameP_gboolean(GtkWidget,GTK_WIDGET,84)
           TS_CALL_void_gtknameP_gboolean(GtkWindow,GTK_WINDOW,109)
           TS_CALL_void_gtknameP_guint(GtkWidget,GTK_WIDGET,101)
           TS_CALL_void_gtknameP_GtkJustification(GtkLabel,GTK_LABEL,212)
+          TS_CALL_void_gtknameP_GtkJustification(GtkTextView,GTK_TEXT_VIEW,312)
           TS_CALL_void_gtknameP_GtkNaturalWrapMode(GtkLabel,GTK_LABEL,213)
           TS_CALL_void_gtknameP_guint(GtkWidgetClass,GTK_WIDGET_GET_CLASS,73)
           TS_CALL_void_gtknameP_int(GtkLabel,GTK_LABEL,207)
+          TS_CALL_void_gtknameP_int(GtkTextView,GTK_TEXT_VIEW,307)
           TS_CALL_void_gtknameP_int(GtkWidget,GTK_WIDGET,102)
           if(NULL != (vu=table_get(table_void_GtkWidgetClassP_constcharP_constcharP,command))) { /*064*/
               if(DEBUG) fprintf(stderr,"CALLBACK064 %s, widget_id: %s argument1: %s argument2: %s\n",command,widget_id,operanda, operandb);
@@ -1124,9 +1215,22 @@ void *wrap_reader_loop(void* user_data) {
           } else /*118 vergeben*//*119 vergeben*/
         //
         // Legacy Aufrufe
+          if(!strcmp(command, "get_pointer")) {
+              GtkWidget *widget = widget_id == NULL ? NULL : GTK_WIDGET(gtk_builder_get_object(pargs->builder, widget_id));
+              fprintf(pargs->fpout, "%p\n", widget);  
+              fflush(pargs->fpout);
+          } else
+          if(!strcmp(command, "set_text")) {
+              void *pointer;
+              sscanf(widget_id, "%p", &pointer);
+              GtkLabel *widget = GTK_LABEL(pointer);
+              gtk_widget_add_css_class(GTK_WIDGET(pointer),"green");
+              fprintf(pargs->fpout, "%p\n", widget);
+              fflush(pargs->fpout);
+          } else
           if(!strcmp(command, "set_textview_text")) {
               gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), operanda, -1); 
-          } else
+          } else         
           if(!strcmp(command, "get_textview_text")) {
               GtkTextIter a, b;
               GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)); 
