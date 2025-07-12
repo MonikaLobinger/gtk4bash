@@ -43,6 +43,10 @@ on_button_gtk_window_set_auto_startup_notification_clicked() {
     echo "gtk_window_set_auto_startup_notification 1"
 } > $IN
 
+on_button_gtk_widget_get_default_direction_clicked() {
+    echo "gtk_widget_get_default_direction"
+} > $IN
+
 on_button_gtk_window_get_set_title_clicked(){
     val=
     echo "|gtk_window_get_title|win1"
@@ -83,6 +87,5 @@ on_button_gtk_window_minimize_clicked(){
 
 G_ENABLE_DIAGNOSTIC=1;$WRAP | while read line
 do
-    echo "LINE: $line"
     $line
 done
