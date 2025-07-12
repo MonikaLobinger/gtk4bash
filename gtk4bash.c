@@ -26,18 +26,18 @@ short VERBOSE = 0;
 //
 typedef void (* sigfu)(GtkBuilder*,char*, char*, char*, char*, char*, char*, char*);
 //
-typedef struct {char* name; void* sig_fup; void* gtk_fup;} FU;
+typedef struct {char* name; void* wrapper_fup; void* gtk_fup;} FU;
 typedef struct {int size;FU* fus;} FUS;
 FUS cmds = {0,NULL};
 void table_free() {
     free(cmds.fus);
   }
-void table_add(char* name, void* sig_fup, void* gtk_fup) {
+void table_add(char* name, void* wrapper_fup, void* gtk_fup) {
     if(!cmds.size) cmds.fus=malloc(sizeof(FU));
     else cmds.fus=realloc(cmds.fus, sizeof(FU)*(cmds.size+1));
     (cmds.fus + cmds.size)->name = malloc(strlen(name) + 1);
     strcpy((cmds.fus + cmds.size)->name, name);
-    (cmds.fus + cmds.size)->sig_fup = sig_fup;
+    (cmds.fus + cmds.size)->wrapper_fup = wrapper_fup;
     (cmds.fus + cmds.size)->gtk_fup = gtk_fup;
     cmds.size++;
   }
@@ -48,7 +48,7 @@ void* table_get_gtk_fu( char* name) {
   }
 void* table_get_sig_fu( char* name) {
     for (int i = 0; i < cmds.size; i++)
-        if (strcmp((cmds.fus + i)->name, name)==0)return(cmds.fus + i)->sig_fup;
+        if (strcmp((cmds.fus + i)->name, name)==0)return(cmds.fus + i)->wrapper_fup;
     return NULL;
   }
 //
@@ -57,6 +57,8 @@ void trim(char *s) {
     if (len > 0) memmove(s, s + len, strlen(s) - len + 1);
   }
 const char*atoa(const char*s) {return s;}
+// todo !!!Das funktioniert nur für einen Pointer!!!
+void *atop(const char*s) {static void *p;sscanf(s, "%p", &p);return p;}
 
 typedef struct {
     char       *app_name;
@@ -96,6 +98,7 @@ void cbk_wrap_signal_handler(gpointer user_data, GObject *object) {
     fprintf(stdout, "%s\n", signal);
     fflush(stdout);
 }
+
 void *wrap_reader_loop(void* user_data) {
     if(DEBUG) fprintf(stderr, "START %s()... - ENDE wird nie erreicht.\n", __func__);
     _args *pargs = (_args *)user_data;
@@ -117,356 +120,259 @@ void *wrap_reader_loop(void* user_data) {
     char input[1024]; 
     char strend = ' ';
     char *command = NULL;
-    char *arg1 = NULL;
-    char *arg2 = NULL;
-    char *arg3 = NULL;
-    char *arg4 = NULL;
-    char *arg5 = NULL;
-    char *arg6 = NULL;
+    char *arg1 = NULL; char *arg2 = NULL; char *arg3 = NULL; char *arg4 = NULL; char *arg5 = NULL; char *arg6 = NULL;
     void *sig_vu;
-
     //
     // DEFinitionen alphabetisch
-      //xx  FUS* table_void_GtkTextDirection=table_new();
-      //xx  typedef void(*sig_void_GtkTextDirection)(GtkTextDirection);
-      SIGFU_DEF_VOID_PAR1(gboolean,gboolean,atoi)
-      SIGFU_DEF_VOID_PAR1(GtkTextDirection,GtkTextDirection,atoi)
-      SIGFU_DEF_RET(GtkTextDirection,GtkTextDirection,"%i")
-      SIGFU_DEF_RET_gtknameP(constcharP,const char*,"%s",GtkLabel,GTK_LABEL)
-      SIGFU_DEF_RET_gtknameP(constcharP,const char*,"%s",GtkWidget,GTK_WIDGET)
-      SIGFU_DEF_RET_gtknameP(constcharP,const char*,"%s",GtkWidgetClass,GTK_WIDGET_CLASS)
-      SIGFU_DEF_RET_gtknameP(constcharP,const char*,"%s",GtkWindow,GTK_WINDOW)
-      SIGFU_DEF_RET_gtknameP(double,double,"%d",GtkWidget,GTK_WIDGET)
-      SIGFU_DEF_RET_gtknameP(float,float,"%f",GtkLabel,GTK_LABEL)
-      SIGFU_DEF_RET_gtknameP(gboolean,gboolean,"%i",GtkLabel,GTK_LABEL)
-      SIGFU_DEF_RET_gtknameP(gboolean,gboolean,"%i",GtkTextView,GTK_TEXT_VIEW)
-      SIGFU_DEF_RET_gtknameP(gboolean,gboolean,"%i",GtkWidget,GTK_WIDGET)
-      SIGFU_DEF_RET_gtknameP(gboolean,gboolean,"%i",GtkWindow,GTK_WINDOW)
-      SIGFU_DEF_RET_gtknameP(GtkJustification,GtkJustification,"%i",GtkLabel,GTK_LABEL)
-      SIGFU_DEF_RET_gtknameP(GtkJustification,GtkJustification,"%i",GtkTextView,GTK_TEXT_VIEW)
-      SIGFU_DEF_RET_gtknameP(GtkNaturalWrapMode,GtkNaturalWrapMode,"%i",GtkLabel,GTK_LABEL)
-      SIGFU_DEF_RET_gtknameP(PangoEllipsizeMode,PangoEllipsizeMode,"%i",GtkLabel,GTK_LABEL)
-      SIGFU_DEF_RET_gtknameP(PangoWrapMode,PangoWrapMode,"%i",GtkLabel,GTK_LABEL)
-      SIGFU_DEF_RET_gtknameP(guint,guint,"%i",GtkLabel,GTK_LABEL)
-      SIGFU_DEF_RET_gtknameP(guint,guint,"%i",GtkWidgetClass,GTK_WIDGET_CLASS)
-      SIGFU_DEF_RET_gtknameP(int,int,"%i",GtkLabel,GTK_LABEL)
-      SIGFU_DEF_RET_gtknameP(int,int,"%i",GtkTextView,GTK_TEXT_VIEW)
-      SIGFU_DEF_RET_gtknameP(int,int,"%i",GtkWidget,GTK_WIDGET)
+      #pragma GCC diagnostic push
+      #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+      #pragma GCC diagnostic pop
+      SIGFU_DEF_RET(GtkTextDirection,GtkTextDirection,atoi,"%i",FALSE)
+      SIGFU_DEF_RET(constcharP,const char*,atoa,"%s",FALSE)
+      SIGFU_DEF_RET_PAR1(constcairo_font_options_tP,const cairo_font_options_t *,atop,"%p",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(constcharP,const char*,atoa,"%s",FALSE,     GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(constcharP,const char*,atoa,"%s",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(constcharP,const char*,atoa,"%s",FALSE,     GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(constcharP,const char*,atoa,"%s",FALSE,     GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
+      SIGFU_DEF_ARR_PAR1(charPP,const char**,atoa,"%s",FALSE,        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(double,double,atof,"%d",FALSE,              GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(float,float,atof,"%f",FALSE,                GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(gboolean,gboolean,atoi,"%i",FALSE,          GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(gboolean,gboolean,atoi,"%i",FALSE,          GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(gboolean,gboolean,atoi,"%i",FALSE,          GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(gboolean,gboolean,atoi,"%i",FALSE,          GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(GtkJustification,GtkJustification,atoi,"%i",FALSE,      GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(GtkJustification,GtkJustification,atoi,"%i",FALSE,      GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(GtkNaturalWrapMode,GtkNaturalWrapMode,atoi,"%i",FALSE,  GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(PangoEllipsizeMode,PangoEllipsizeMode,atoi,"%i",FALSE,  GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(PangoWrapMode,PangoWrapMode,atoi,"%i",FALSE,            GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(GtkStateFlags,GtkStateFlags,atoi,"%i",FALSE,            GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(GtkTextDirection,GtkTextDirection,atoi,"%i",FALSE,      GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(guint,guint,atoi,"%i",FALSE,                GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(guint,guint,atoi,"%i",FALSE,                GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(int,int,atoi,"%i",FALSE,                    GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(int,int,atoi,"%i",FALSE,                    GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
+      SIGFU_DEF_RET_PAR1(int,int,atoi,"%i",FALSE,                    GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      #pragma GCC diagnostic push
+      #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+      SIGFU_DEF_RET_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,     constcharP,const char*,atoa,"%s",FALSE,            GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,     gboolean,gboolean,atoi,"%i",FALSE,                 GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,     GtkDirectionType,GtkDirectionType,atoi,"%i",FALSE, GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,     GtkOrientation,GtkOrientation,atoi,"%i",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR2_PAR1(int,int,atoi,"%i",FALSE,               GtkOrientation,GtkOrientation,atoi,"%i",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR2_PAR3_PAR1(gboolean,gboolean,atoi,"%i",FALSE,     double,double,atof,"%d",FALSE,      double,double,atof,"%d",FALSE,      GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET_PAR2_PAR3_PAR4_PAR5_PAR1(gboolean,gboolean,atoi,"%i",FALSE,    int,int,atoi,"%i",FALSE,     int,int,atoi,"%i",FALSE,     int,int,atoi,"%i",FALSE,    int,int,atoi,"%i",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      #pragma GCC diagnostic pop
       #if FALSE
-        FUS* table_charPP_GtkWidgetP=table_new();
-        typedef char**(*sig_charPP_GtkWidgetP)(GtkWidget*);
-        FUS* table_constcairo_font_options_tP_GtkWidgetP=table_new();
-        typedef const cairo_font_options_t*(*sig_constcairo_font_options_tP_GtkWidgetP)(GtkWidget*);
-        FUS* table_constcharP=table_new();                      // const char* void
-        typedef const char*(*sig_constcharP)();
-        FUS* table_gboolean_GtkWidgetClassP_guint_GTypeP_constcharPP_constGVariantTypePP_constcharPP=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetClassP_guint_GTypeP_constcharPP_constGVariantTypePP_constcharPP)(GtkWidgetClass*,guint,GType*,const char**,const GVariantType**,const char**);
-        FUS* table_gboolean_GtkWidgetP_constcharP=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_constcharP)(GtkWidget*,const char*);
-        FUS* table_gboolean_GtkWidgetP_constcharP_constcharP_Elipse=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_constcharP_constcharP_Elipse)(GtkWidget*,const char*,const char*,...);
-        FUS* table_gboolean_GtkWidgetP_constcharP_GVariantP=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_constcharP_GVariantP)(GtkWidget*,const char*,GVariant*);
-        FUS* table_gboolean_GtkWidgetP_double_double=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_double_double)(GtkWidget*,double,double);
-        FUS* table_gboolean_GtkWidgetP_gboolean=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_gboolean)(GtkWidget*,gboolean);
-        FUS* table_gboolean_GtkWidgetP_GtkDirectionType=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_GtkDirectionType)(GtkWidget*,GtkDirectionType);
-        FUS* table_gboolean_GtkWidgetP_GtkOrientation=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_GtkOrientation)(GtkWidget*,GtkOrientation);
-        FUS* table_gboolean_GtkWidgetP_GtkWidgetP_constgraphene_point_tP_graphene_point_tP=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_GtkWidgetP_constgraphene_point_tP_graphene_point_tP)(GtkWidget*,GtkWidget*,const graphene_point_t*,graphene_point_t*);
-        FUS* table_gboolean_GtkWidgetP_GtkWidgetP_double_double_doubleP_doubleP=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_GtkWidgetP_double_double_doubleP_doubleP)(GtkWidget*,GtkWidget*,double,double,double*,double*);
-        FUS* table_gboolean_GtkWidgetP_GtkWidgetP_graphene_matrix_tP=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_GtkWidgetP_graphene_matrix_tP)(GtkWidget*,GtkWidget*,graphene_matrix_t*);
-        FUS* table_gboolean_GtkWidgetP_GtkWidgetP=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_GtkWidgetP)(GtkWidget*,GtkWidget*);
-        FUS* table_gboolean_GtkWidgetP_GtkWidgetP_graphene_rect_tP=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_GtkWidgetP_graphene_rect_tP)(GtkWidget*,GtkWidget*,graphene_rect_t*);
-        FUS* table_gboolean_GtkWidgetP_int_int_int_int=table_new();
-        typedef gboolean(*sig_gboolean_GtkWidgetP_int_int_int_int)(GtkWidget*,int,int,int,int);
-        FUS* table_GdkClipboardP_GtkWidgetP=table_new();
-        typedef GdkClipboard*(*sig_GdkClipboardP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GdkCursorP_GtkWidgetP=table_new();
-        typedef GdkCursor*(*sig_GdkCursorP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GdkDisplayP_GtkWidgetP=table_new();
-        typedef GdkDisplay*(*sig_GdkDisplayP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GdkFrameClockP_GtkWidgetP=table_new();
-        typedef GdkFrameClock*(*sig_GdkFrameClockP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GListP=table_new();                          // GList* void
-        typedef GList*(*sig_GListP)();                   
-        FUS* table_GListP_GtkWidgetP=table_new();
-        typedef GList*(*sig_GListP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GListModelP=table_new();                     // GListModel* void
-        typedef GListModel*(*sig_GListModelP)();         
-        FUS* table_GListModelP_GtkWidgetP=table_new();
-        typedef GListModel*(*sig_GListModelP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GObjectP_GtkWidgetP_GType_constcharP=table_new();
-        typedef GObject*(*sig_GObjectP_GtkWidgetP_GType_constcharP)(GtkWidget*,GType,const char*);
-        FUS* table_GtkAccessibleRole_GtkWidgetClassP=table_new();
-        typedef GtkAccessibleRole(*sig_GtkAccessibleRole_GtkWidgetClassP)(GtkWidgetClass*);
-        FUS* table_GtkAlign_GtkWidgetP=table_new();
-        typedef GtkAlign(*sig_GtkAlign_GtkWidgetP)(GtkWidget*);
-        FUS* table_GtkApplication_GtkWindowP=table_new();       // GtkApplication* GtkWindow*
-        typedef GtkApplication*(*sig_GtkApplication_GtkWindowP)(GtkWindow*);  
-        FUS* table_GtkLayoutManagerP_GtkWidgetP=table_new();
-        typedef GtkLayoutManager*(*sig_GtkLayoutManagerP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GtkNativeP_GtkWidgetP=table_new();
-        typedef GtkNative*(*sig_GtkNativeP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GtkOverflow_GtkWidgetP=table_new();
-        typedef GtkOverflow(*sig_GtkOverflow_GtkWidgetP)(GtkWidget*);
-        FUS* table_GtkRootP_GtkWidgetP=table_new();
-        typedef GtkRoot*(*sig_GtkRootP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GtkSettingsP_GtkWidgetP=table_new();
-        typedef GtkSettings*(*sig_GtkSettingsP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GtkSizeRequestMode_GtkWidgetP=table_new();
-        typedef GtkSizeRequestMode(*sig_GtkSizeRequestMode_GtkWidgetP)(GtkWidget*);
-        FUS* table_GtkStateFlags_GtkWidgetP=table_new();
-        typedef GtkStateFlags(*sig_GtkStateFlags_GtkWidgetP)(GtkWidget*);
-        FUS* table_GtkStyleContextP_GtkWidgetP=table_new();
-        typedef GtkStyleContext*(*sig_GtkStyleContextP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GtkTextDirection_GtkWidgetP=table_new();
-        typedef GtkTextDirection(*sig_GtkTextDirection_GtkWidgetP)(GtkWidget*);
-        FUS* table_GtkWidgetP_GtkWidgetP=table_new();
-        typedef GtkWidget*(*sig_GtkWidgetP_GtkWidgetP)(GtkWidget*);
-        FUS* table_GtkWidgetP_GtkWidgetP_double_double_GtkPickFlags=table_new();
-        typedef GtkWidget*(*sig_GtkWidgetP_GtkWidgetP_double_double_GtkPickFlags)(GtkWidget*,double,double,GtkPickFlags);
-        FUS* table_GtkWidgetP_GtkWidgetP_GType=table_new();
-        typedef GtkWidget*(*sig_GtkWidgetP_GtkWidgetP_GType)(GtkWidget*,GType);
-        FUS* table_GtkWidgetP_GtkWindowP=table_new();           // GtkWidget* GtkWindow*
-        typedef GtkWidget*(*sig_GtkWidgetP_GtkWindowP)(GtkWindow*);  
+        gboolean FU(GtkWidgetClass*,guint,GType*,const char**,const GVariantType**,const char**);
+        gboolean FU(GtkWidget*,const char*,const char*,...);
+        gboolean FU(GtkWidget*,const char*,GVariant*);
+        gboolean FU(GtkWidget*,GtkWidget*,const graphene_point_t*,graphene_point_t*);
+        gboolean FU(GtkWidget*,GtkWidget*,double,double,double*,double*);
+        gboolean FU(GtkWidget*,GtkWidget*,graphene_matrix_t*);
+        gboolean FU(GtkWidget*,GtkWidget*);
+        gboolean FU(GtkWidget*,GtkWidget*,graphene_rect_t*);
+        GdkClipboard* FU(GtkWidget*);
+        GdkCursor* FU(GtkWidget*);
+        GdkDisplay* FU(GtkWidget*);
+        GdkFrameClock* FU(GtkWidget*);
+        GList* FU();                   
+        GList* FU(GtkWidget*);
+        GListModel* FU();         
+        GListModel* FU(GtkWidget*);
+        GObject* FU(GtkWidget*,GType,const char*);
+        GtkAccessibleRole FU(GtkWidgetClass*);
+        GtkAlign FU(GtkWidget*);
+        GtkApplication* FU(GtkWindow*);  
+        GtkLayoutManager* FU(GtkWidget*);
+        GtkNative* FU(GtkWidget*);
+        GtkOverflow FU(GtkWidget*);
+        GtkRoot* FU(GtkWidget*);
+        GtkSettings* FU(GtkWidget*);
+        GtkSizeRequestMode FU(GtkWidget*);
+        GtkStyleContext* FU(GtkWidget*);
+        GtkWidget* FU(GtkWidget*);
+        GtkWidget* FU(GtkWidget*,double,double,GtkPickFlags);
+        GtkWidget* FU(GtkWidget*,GType);
+        GtkWidget* FU(GtkWindow*);  
         #if GTK_MINOR_VERSION >= 20
-          FUS* table_GtkWindowGravity_GtkWindowP=table_new();     // GtkWindowGravity GtkWindow*
-          typedef GtkWindowGravity (*sig_GtkWindowGravity_GtkWindowP)(GtkWindow*);
+          GtkWindowGravity FU(GtkWindow*);
         #endif
-        FUS* table_GtkWindowGroupP_GtkWindowP=table_new();      // GtkWindowGroup* GtkWindow*
-        typedef GtkWindowGroup (*sig_GtkWindowGroupP_GtkWindowP)(GtkWindow*);
-        FUS* table_GtkWindowP_GtkWindowP=table_new();           // GtkWindow* GtkWindow*
-        typedef GtkWindow* (*sig_GtkWindowP_GtkWindowP)(GtkWindow*);
-        FUS* table_GType_GtkWidgetClassP=table_new();
-        typedef GType(*sig_GType_GtkWidgetClassP)(GtkWidgetClass*);
-        FUS* table_guint_GtkWidgetP_GtkTickCallback_gpointer_GDestroyNotify=table_new();
-        typedef guint(*sig_guint_GtkWidgetP_GtkTickCallback_gpointer_GDestroyNotify)(GtkWidget*,GtkTickCallback,gpointer,GDestroyNotify);
-        FUS* table_int_GtkWidgetP_GtkOrientation=table_new();
-        typedef int(*sig_int_GtkWidgetP_GtkOrientation)(GtkWidget*,GtkOrientation);
-        FUS* table_PangoContextP_GtkWidgetP=table_new();
-        typedef PangoContext*(*sig_PangoContextP_GtkWidgetP)(GtkWidget*);
-        FUS* table_PangoFontMapP_GtkWidgetP=table_new();
-        typedef PangoFontMap*(*sig_PangoFontMapP_GtkWidgetP)(GtkWidget*);
-        FUS* table_PangoLayoutP_GtkWidgetP_constcharP=table_new();
-        typedef PangoLayout*(*sig_PangoLayoutP_GtkWidgetP_constcharP)(GtkWidget*,const char*);
-        FUS* table_void_constcharP=table_new();                 // void const char * 
-        typedef void(*sig_void_constcharP)(const char*); 
-        FUS* table_void_gboolean=table_new();                   // void gboolean
-        typedef void(*sig_void_gboolean)(gboolean);      
+        GtkWindowGroup  FU(GtkWindow*);
+        GtkWindow*  FU(GtkWindow*);
+        GType FU(GtkWidgetClass*);
+        guint FU(GtkWidget*,GtkTickCallback,gpointer,GDestroyNotify);
+        PangoContext* FU(GtkWidget*);
+        PangoFontMap* FU(GtkWidget*);
+        PangoLayout* FU(GtkWidget*,const char*);
       #endif // FALSE
-      SIGFU_DEF_VOID_gtknameP(void,GtkWidget,GTK_WIDGET)
-      SIGFU_DEF_VOID_gtknameP(void,GtkWindow,GTK_WINDOW)
-      SIGFU_DEF_VOID_gtknameP_PAR2(constcharP,const char*,atoa,GtkLabel,GTK_LABEL)
-      SIGFU_DEF_VOID_gtknameP_PAR2(constcharP,const char*,atoa,GtkWidgetClass,GTK_WIDGET_CLASS)
-      SIGFU_DEF_VOID_gtknameP_PAR2(constcharP,const char*,atoa,GtkWidget,GTK_WIDGET)
-      SIGFU_DEF_VOID_gtknameP_PAR2(constcharP,const char*,atoa,GtkWindow,GTK_WINDOW)
-      SIGFU_DEF_VOID_gtknameP_PAR2(double,double,atof,GtkWidget,GTK_WIDGET)
-      SIGFU_DEF_VOID_gtknameP_PAR2(float,float,atof,GtkLabel,GTK_LABEL)
-      SIGFU_DEF_VOID_gtknameP_PAR2(gboolean,gboolean,atoi,GtkLabel,GTK_LABEL)
-      SIGFU_DEF_VOID_gtknameP_PAR2(gboolean,gboolean,atoi,GtkTextView,GTK_TEXT_VIEW)
-      SIGFU_DEF_VOID_gtknameP_PAR2(gboolean,gboolean,atoi,GtkWidget,GTK_WIDGET)
-      SIGFU_DEF_VOID_gtknameP_PAR2(gboolean,gboolean,atoi,GtkWindow,GTK_WINDOW)
-      SIGFU_DEF_VOID_gtknameP_PAR2(GtkJustification,GtkJustification,atoi,GtkLabel,GTK_LABEL)
-      SIGFU_DEF_VOID_gtknameP_PAR2(GtkJustification,GtkJustification,atoi,GtkTextView,GTK_TEXT_VIEW)
-      SIGFU_DEF_VOID_gtknameP_PAR2(GtkNaturalWrapMode,GtkNaturalWrapMode,atoi,GtkLabel,GTK_LABEL)
-      SIGFU_DEF_VOID_gtknameP_PAR2(guint,guint,atoi,GtkWidgetClass,GTK_WIDGET_CLASS)
-      SIGFU_DEF_VOID_gtknameP_PAR2(guint,guint,atoi,GtkWidget,GTK_WIDGET)
-      SIGFU_DEF_VOID_gtknameP_PAR2(int,int,atoi,GtkLabel,GTK_LABEL)
-      SIGFU_DEF_VOID_gtknameP_PAR2(int,int,atoi,GtkTextView,GTK_TEXT_VIEW)
-      SIGFU_DEF_VOID_gtknameP_PAR2(int,int,atoi,GtkWidget,GTK_WIDGET)
-      SIGFU_DEF_VOID_gtknameP_PAR2(PangoEllipsizeMode,PangoEllipsizeMode,atoi,GtkLabel,GTK_LABEL)
-      SIGFU_DEF_VOID_gtknameP_PAR2(PangoWrapMode,PangoWrapMode,atoi,GtkLabel,GTK_LABEL)
+      SIGFU_DEF_VOID_PAR1(GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR1(GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
+      #pragma GCC diagnostic push
+      #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+      SIGFU_DEF_VOID_PAR1(gboolean,gboolean,atoi,"%i",FALSE)
+      SIGFU_DEF_VOID_PAR1(GtkTextDirection,GtkTextDirection,atoi,"%i",FALSE)
+      SIGFU_DEF_VOID_PAR1(constcharP,const char*,atoa,"%s",FALSE)
+      SIGFU_DEF_VOID_PAR2_PAR1(constcharP,const char*,atoa,"%s",FALSE,          GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(constcharP,const char*,atoa,"%s",FALSE,          GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(constcharP,const char*,atoa,"%s",FALSE,          GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(constcharP,const char*,atoa,"%s",FALSE,          GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(double,double,atof,"%d",FALSE,                   GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(float,float,atof,"%f",FALSE,                     GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,               GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,               GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,               GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,
+                               GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(GtkJustification,GtkJustification,atoi,"%i",FALSE,         GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(GtkJustification,GtkJustification,atoi,"%i",FALSE,         GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(GtkNaturalWrapMode,GtkNaturalWrapMode,atoi,"%i",FALSE,     GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(guint,guint,atoi,"%i",FALSE,                     GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(guint,guint,atoi,"%i",FALSE,                     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(int,int,atoi,"%i",FALSE,                         GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(int,int,atoi,"%i",FALSE,                         GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(int,int,atoi,"%i",FALSE,                         GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(PangoEllipsizeMode,PangoEllipsizeMode,atoi,"%i",FALSE,      GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR1(PangoWrapMode,PangoWrapMode,atoi,"%i",FALSE,                GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(constcharP,const char*,atoa,"%s",FALSE,                gboolean,gboolean,atoi,"%i",FALSE,          GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(constcharP,const char*,atoa,"%s",FALSE,                constcharP,const char*,atoa,"%s",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      #pragma GCC diagnostic pop
       #if FALSE
-        FUS* table_void_GtkWidgetClassP_constcharP_constcharP=table_new();
-        typedef void(*sig_void_GtkWidgetClassP_constcharP_constcharP)(GtkWidgetClass*,const char*,const char*);
-        FUS* table_void_GtkWidgetClassP_constcharP_constcharP_GtkWidgetActionActivateFunc=table_new();
-        typedef void(*sig_void_GtkWidgetClassP_constcharP_constcharP_GtkWidgetActionActivateFunc)(GtkWidgetClass*,const char*,const char*,GtkWidgetActionActivateFunc);
-        FUS* table_void_GtkWidgetClassP_constcharP_gboolean_gssize=table_new();
-        typedef void(*sig_void_GtkWidgetClassP_constcharP_gboolean_gssize)(GtkWidgetClass*,const char*,gboolean,gssize);
-        FUS* table_void_GtkWidgetClassP_constcharP_GCallback=table_new();
-        typedef void(*sig_void_GtkWidgetClassP_constcharP_GCallback)(GtkWidgetClass*,const char*,GCallback);
-        FUS* table_void_GtkWidgetClassP_GBytesP=table_new();
-        typedef void(*sig_void_GtkWidgetClassP_GBytesP)(GtkWidgetClass*,GBytes*);
-        FUS* table_void_GtkWidgetClassP_GtkAccessibleRole=table_new();
-        typedef void(*sig_void_GtkWidgetClassP_GtkAccessibleRole)(GtkWidgetClass*,GtkAccessibleRole);
-        FUS* table_void_GtkWidgetClassP_GtkBuilderScopeP=table_new();
-        typedef void(*sig_void_GtkWidgetClassP_GtkBuilderScopeP)(GtkWidgetClass*,GtkBuilderScope*);
-        FUS* table_void_GtkWidgetClassP_GtkShortcutP=table_new();
-        typedef void(*sig_void_GtkWidgetClassP_GtkShortcutP)(GtkWidgetClass*,GtkShortcut*);
-        FUS* table_void_GtkWidgetClassP_GType=table_new();
-        typedef void(*sig_void_GtkWidgetClassP_GType)(GtkWidgetClass*,GType);
-        FUS* table_void_GtkWidgetClassP_guint_GdkModifierType_constcharP_constcharP_Elipse=table_new();
-        typedef void(*sig_void_GtkWidgetClassP_guint_GdkModifierType_constcharP_constcharP_Elipse)(GtkWidgetClass*,guint,GdkModifierType,const char*,const char*,...);
-        FUS* table_void_GtkWidgetClassP_guint_GdkModifierType_GtkShortcutFunc_constcharP_Elipse=table_new();
-        typedef void(*sig_void_GtkWidgetClassP_guint_GdkModifierType_GtkShortcutFunc_constcharP_Elipse)(GtkWidgetClass*,guint,GdkModifierType,GtkShortcutFunc,const char*,...);
-        FUS* table_void_GtkWidgetP_constcairo_font_options_tP=table_new();
-        typedef void(*sig_void_GtkWidgetP_constcairo_font_options_tP)(GtkWidget*,const cairo_font_options_t*);
-        FUS* table_void_GtkWidgetP_constcharP_GActionGroupP=table_new();
-        typedef void(*sig_void_GtkWidgetP_constcharP_GActionGroupP)(GtkWidget*,const char*,GActionGroup*);
-        FUS* table_void_GtkWidgetP_constcharP_gboolean=table_new();
-        typedef void(*sig_void_GtkWidgetP_constcharP_gboolean)(GtkWidget*,const char*,gboolean);
-        FUS* table_void_GtkWidgetP_constcharPP=table_new();
-        typedef void(*sig_void_GtkWidgetP_constcharPP)(GtkWidget*,const char**);
-        FUS* table_void_GtkWidgetP_constGtkAllocationP_int=table_new();
-        typedef void(*sig_void_GtkWidgetP_constGtkAllocationP_int)(GtkWidget*,const GtkAllocation*,int);
-        FUS* table_void_GtkWidgetP_GdkCursorP=table_new();
-        typedef void(*sig_void_GtkWidgetP_GdkCursorP)(GtkWidget*,GdkCursor*);
-        FUS* table_void_GtkWidgetP_GdkRGBA=table_new();
-        typedef void(*sig_void_GtkWidgetP_GdkRGBA)(GtkWidget*,GdkRGBA);
-        FUS* table_void_GtkWidgetP_GtkAlign=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkAlign)(GtkWidget*,GtkAlign);
-        FUS* table_void_GtkWidgetP_GtkAllocationP=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkAllocationP)(GtkWidget*,GtkAllocation*);
-        FUS* table_void_GtkWidgetP_GtkEventControllerP=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkEventControllerP)(GtkWidget*,GtkEventController*);
-        FUS* table_void_GtkWidgetP_GtkLayoutManagerP=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkLayoutManagerP)(GtkWidget*,GtkLayoutManager*);
-        FUS* table_void_GtkWidgetP_GtkOrientation_int_intP_intP_intP_intP=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkOrientation_int_intP_intP_intP_intP)(GtkWidget*,GtkOrientation,int,int*,int*,int*,int*);
-        FUS* table_void_GtkWidgetP_GtkOverflow=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkOverflow)(GtkWidget*,GtkOverflow);
-        FUS* table_void_GtkWidgetP_GtkRequisitionP_GtkRequisitionP=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkRequisitionP_GtkRequisitionP)(GtkWidget*,GtkRequisition*,GtkRequisition*);
-        FUS* table_void_GtkWidgetP_GtkStateFlags=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkStateFlags)(GtkWidget*,GtkStateFlags);
-        FUS* table_void_GtkWidgetP_GtkStateFlags_gboolean=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkStateFlags_gboolean)(GtkWidget*,GtkStateFlags,gboolean);
-        FUS* table_void_GtkWidgetP_GtkTextDirection=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkTextDirection)(GtkWidget*,GtkTextDirection);
-        FUS* table_void_GtkWidgetP_GtkWidgetP=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkWidgetP)(GtkWidget*,GtkWidget*);
-        FUS* table_void_GtkWidgetP_GtkWidgetP_GtkSnapshotP=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkWidgetP_GtkSnapshotP)(GtkWidget*,GtkWidget*,GtkSnapshot*);
-        FUS* table_void_GtkWidgetP_GtkWidgetP_GtkWidgetP=table_new();
-        typedef void(*sig_void_GtkWidgetP_GtkWidgetP_GtkWidgetP)(GtkWidget*,GtkWidget*,GtkWidget*);
-        FUS* table_void_GtkWidgetP_GType=table_new();
-        typedef void(*sig_void_GtkWidgetP_GType)(GtkWidget*,GType);
-        FUS* table_void_GtkWidgetP_int_int=table_new();
-        typedef void(*sig_void_GtkWidgetP_int_int)(GtkWidget*,int,int);
-        FUS* table_void_GtkWidgetP_int_int_int_GskTransformP=table_new();
-        typedef void(*sig_void_GtkWidgetP_int_int_int_GskTransformP)(GtkWidget*,int,int,int,GskTransform*);
-        FUS* table_void_GtkWidgetP_intP_intP=table_new();
-        typedef void(*sig_void_GtkWidgetP_intP_intP)(GtkWidget*,int*,int*);
-        FUS* table_void_GtkWidgetP_PangoFontMapP=table_new();
-        typedef void(*sig_void_GtkWidgetP_PangoFontMapP)(GtkWidget*,PangoFontMap*);
-        FUS* table_void_GtkWindowP_GdkDisplayP=table_new();     // void GtkWindow* GdkDisplay*
-        typedef void (*sig_void_GtkWindowP_GdkDisplayP)(GtkWindow*, GdkDisplay*);
-        FUS* table_void_GtkWindowP_GdkMonitorP=table_new();     // void GtkWindow* GdkMonitor*
-        typedef void(*sig_void_GtkWindowP_GdkMonitorP)(GtkWindow*, GdkMonitor*);  
-        FUS* table_void_GtkWindowP_GtkApplicationP=table_new(); // void GtkWindow* GtkApplication*
-        typedef void (*sig_void_GtkWindowP_GtkApplicationP)(GtkWindow*, GtkApplication*);
-        FUS* table_void_GtkWindowP_GtkWidgetP=table_new();      // void GtkWindow* GtkWidget*
-        typedef void (*sig_void_GtkWindowP_GtkWidgetP)(GtkWindow*,GtkWidget);
+        FU(GtkWidgetClass*,const char*,const char*,GtkWidgetActionActivateFunc);
+        FU(GtkWidgetClass*,const char*,gboolean,gssize);
+        FU(GtkWidgetClass*,const char*,GCallback);
+        FU(GtkWidgetClass*,GBytes*);
+        FU(GtkWidgetClass*,GtkAccessibleRole);
+        FU(GtkWidgetClass*,GtkBuilderScope*);
+        FU(GtkWidgetClass*,GtkShortcut*);
+        FU(GtkWidgetClass*,GType);
+        FU(GtkWidgetClass*,guint,GdkModifierType,const char*,const char*,...);
+        FU(GtkWidgetClass*,guint,GdkModifierType,GtkShortcutFunc,const char*,...);
+        FU(GtkWidget*,const cairo_font_options_t*);
+        FU(GtkWidget*,const char*,GActionGroup*);
+        FU(GtkWidget*,const char**);
+        FU(GtkWidget*,const GtkAllocation*,int);
+        FU(GtkWidget*,GdkCursor*);
+        FU(GtkWidget*,GdkRGBA);
+        FU(GtkWidget*,GtkAlign);
+        FU(GtkWidget*,GtkAllocation*);
+        FU(GtkWidget*,GtkEventController*);
+        FU(GtkWidget*,GtkLayoutManager*);
+        FU(GtkWidget*,GtkOrientation,int,int*,int*,int*,int*);
+        FU(GtkWidget*,GtkOverflow);
+        FU(GtkWidget*,GtkRequisition*,GtkRequisition*);
+        FU(GtkWidget*,GtkStateFlags);
+        FU(GtkWidget*,GtkStateFlags,gboolean);
+        FU(GtkWidget*,GtkTextDirection);
+        FU(GtkWidget*,GtkWidget*);
+        FU(GtkWidget*,GtkWidget*,GtkSnapshot*);
+        FU(GtkWidget*,GtkWidget*,GtkWidget*);
+        FU(GtkWidget*,GType);
+        FU(GtkWidget*,int,int);
+        FU(GtkWidget*,int,int,int,GskTransform*);
+        FU(GtkWidget*,int*,int*);
+        FU(GtkWidget*,PangoFontMap*);
+        FU(GtkWindow*,GdkDisplay*);
+        FU(GtkWindow*,GdkMonitor*);  
+        FU(GtkWindow*,GtkApplication*);
+        FU(GtkWindow*,GtkWidget);
         #if GTK_MINOR_VERSION >= 20
-          FUS* table_void_GtkWindowP_GtkWindowGravity=table_new();// void GtkWindow* GtkWindowGravity
-          typedef void (*sig_void_GtkWindowP_GtkWindowGravity)(GtkWindow*, GtkWindowGravity);
+          FU(GtkWindow*, GtkWindowGravity);
         #endif
-        FUS* table_void_GtkWindowP_GtkWindowP=table_new();      // void GtkWindow* GtkWindow*
-        typedef void(*sig_void_GtkWindowP_GtkWindowP)(GtkWindow*,GtkWindow*);
-        FUS* table_void_GtkWindowP_guint32=table_new();         // void GtkWindow* guint32
-        typedef void (*sig_void_GtkWindowP_guint32)(GtkWindow*, guint32);
-        FUS* table_void_GtkWindowP_int_int=table_new();         // void GtkWindow* int int
-        typedef void (*sig_void_GtkWindowP_int_int)(GtkWindow*, int, int);
-        FUS* table_void_GtkWindowP_intP_intP=table_new();       // void GtkWindow* int* int*
-        typedef void(*sig_void_GtkWindowP_intP_intP)(GtkWindow*, int*, int*);
+        FU(GtkWindow*,GtkWindow*);
+        FU (GtkWindow*, guint32);
+        FU(GtkWindow*, int, int);
+        FU(GtkWindow*, int*, int*);
       #endif // FALSE
     // CONnections (gtk Funktionen) in der Reihenfolge der doc
       /* GtkWidget ****************************************************001-199*/
         /* Functions */
-          SIGFU_CON_RET(GtkTextDirection,gtk_widget_get_default_direction)
-          SIGFU_CON_VOID_PAR1(GtkTextDirection,gtk_widget_set_default_direction)
+          SIGFU_CON_RET(gtk_widget_get_default_direction,GtkTextDirection)
+          SIGFU_CON_VOID_PAR1(gtk_widget_set_default_direction,GtkTextDirection)
         /* Instance methods */
-          //xx table_add(table_void_GtkWidgetP_constcharP_gboolean, "gtk_widget_action_set_enabled",gtk_widget_action_set_enabled);
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_activate)
+          SIGFU_CON_VOID_PAR1_PAR2_PAR3(gtk_widget_action_set_enabled,GtkWidgetP,constcharP,gboolean)
+          SIGFU_CON_RET_PAR1(gtk_widget_activate,gboolean,GtkWidgetP)
           /*table_gboolean_GtkWidgetP_constcharP_constcharP_Elipse*/ /*gtk_widget_activate_action*/
           /*table_gboolean_GtkWidgetP_constcharP_GVariantP*/ /*gtk_widget_activate_action_variant*/
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_activate_default)
+          SIGFU_CON_VOID_PAR1(gtk_widget_activate_default,GtkWidgetP)
           /*table_void_GtkWidgetP_GtkEventControllerP*/ /*gtk_widget_add_controller*/
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkWidget,gtk_widget_add_css_class)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_widget_add_css_class,GtkWidgetP,constcharP)
           //xx table_add(table_void_GtkWidgetP_GtkWidgetP, "gtk_widget_add_mnemonic_label",gtk_widget_add_mnemonic_label);
           /*table_guint_GtkWidgetP_GtkTickCallback_gpointer_GDestroyNotify*/ /*gtk_widget_add_tick_callback*/
           /*table_void_GtkWidgetP_int_int_int_GskTransformP*/ /*gtk_widget_allocate*/
-          //xx table_add(table_gboolean_GtkWidgetP_GtkDirectionType, "gtk_widget_child_focus",gtk_widget_child_focus);
+          SIGFU_CON_RET_PAR1_PAR2(gtk_widget_child_focus,gboolean,GtkWidgetP,GtkDirectionType)
           /*table_gboolean_GtkWidgetP_GtkWidgetP_graphene_rect_tP*/ /*gtk_widget_compute_bounds*/
           /*table_gboolean_GtkWidgetP_GtkOrientation*/ /*gtk_widget_compute_expand*/
           /*table_gboolean_GtkWidgetP_GtkWidgetP_constgraphene_point_tP_graphene_point_tP*/ /*gtk_widget_compute_point*/
           /*table_gboolean_GtkWidgetP_GtkWidgetP_graphene_matrix_tP*/ /*gtk_widget_compute_transform*/
-          //xx table_add(table_gboolean_GtkWidgetP_double_double, "gtk_widget_contains",gtk_widget_contains);
+          SIGFU_CON_RET_PAR1_PAR2_PAR3(gtk_widget_contains,gboolean,GtkWidgetP,double,double);
           /*table_PangoContextP_GtkWidgetP*/ /*gtk_widget_create_pango_context*/
           /*table_PangoLayoutP_GtkWidgetP_constcharP*/ /*gtk_widget_create_pango_layout*/
           /*table_void_GtkWidgetP_GType*/ /*gtk_widget_dispose_template*/
           /*table_gboolean_GtkWidgetP_int_int_int_int*/ /*gtk_drag_check_threshold*/
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_error_bell)
+          SIGFU_CON_VOID_PAR1(gtk_widget_error_bell,GtkWidgetP)
           #if GTK_MINOR_VERSION < 12
-            SIGFU_CON_RET_gtknameP(int,GtkWidget,gtk_widget_get_allocated_baseline)
-            SIGFU_CON_RET_gtknameP(int,GtkWidget,gtk_widget_get_allocated_height)
-            SIGFU_CON_RET_gtknameP(int,GtkWidget,gtk_widget_get_allocated_width)
+            SIGFU_CON_RET_PAR1(gtk_widget_get_allocated_baseline,int,GtkWidgetP)
+            SIGFU_CON_RET_PAR1(gtk_widget_get_allocated_height,int,GtkWidgetP)
+            SIGFU_CON_RET_PAR1(gtk_widget_get_allocated_width,int,GtkWidgetP)
             //xx table_add(table_void_GtkWidgetP_GtkAllocationP, "gtk_widget_get_allocation",gtk_widget_get_allocation);
           #endif
           /*table_GtkWidgetP_GtkWidgetP_GType*/ /*gtk_widget_get_ancestor*/
           #if GTK_MINOR_VERSION >= 12
-            SIGFU_CON_RET_gtknameP(int,GtkWidget,gtk_widget_get_baseline)
+            SIGFU_CON_RET_PAR1(gtk_widget_get_baseline,int,GtkWidgetP)
           #endif
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_can_focus)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_can_target)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_child_visible)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_can_focus,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_can_target,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_child_visible,gboolean,GtkWidgetP)
           /*table_GdkClipboardP_GtkWidgetP*/ /*gtk_widget_get_clipboard*/
           #if GTK_MINOR_VERSION >= 10
             table_add(table_void_GtkWidgetP_GdkRGBA, "gtk_widget_get_color",gtk_widget_get_color);
           #endif
-          //xx table_add(table_charPP_GtkWidgetP, "gtk_widget_get_css_classes",gtk_widget_get_css_classes);
-          SIGFU_CON_RET_gtknameP(constcharP,GtkWidget,gtk_widget_get_css_name)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_css_classes,charPP,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_css_name,constcharP,GtkWidgetP)
           /*table_GdkCursorP_GtkWidgetP*/ /*gtk_widget_get_cursor*/
           //xx table_add(table_GtkTextDirection_GtkWidgetP, "gtk_widget_get_direction",gtk_widget_get_direction);
           /*table_GdkDisplayP_GtkWidgetP*/ /*gtk_widget_get_display*/
           /*table_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_get_first_child*/
           /*table_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_get_focus_child*/
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_focus_on_click)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_focusable)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_focus_on_click,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_focusable,gboolean,GtkWidgetP)
           /*table_PangoFontMapP_GtkWidgetP*/ /*gtk_widget_get_font_map*/
           #if GTK_MINOR_VERSION < 16
-            /*table_constcairo_font_options_tP_GtkWidgetP*/ /*gtk_widget_get_font_options*/
+            SIGFU_CON_RET_PAR1(gtk_widget_get_font_options,constcairo_font_options_tP,GtkWidgetP)
           #endif
           /*table_GdkFrameClockP_GtkWidgetP*/ /*gtk_widget_get_frame_clock*/
           //xx table_add(table_GtkAlign_GtkWidgetP, "gtk_widget_get_halign",gtk_widget_get_halign);
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_has_tooltip)
-          SIGFU_CON_RET_gtknameP(int,GtkWidget,gtk_widget_get_height)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_hexpand)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_hexpand_set)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_has_tooltip,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_height,int,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_hexpand,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_hexpand_set,gboolean,GtkWidgetP)
           /*table_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_get_last_child*/
           /*table_GtkLayoutManagerP_GtkWidgetP*/ /*gtk_widget_get_layout_manager*/
           #if GTK_MINOR_VERSION >= 18
             table_add(table_gboolean_GtkWidgetP, "gtk_widget_get_limit_events",gtk_widget_get_limit_events);
           #endif
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_mapped)
-          SIGFU_CON_RET_gtknameP(int,GtkWidget,gtk_widget_get_margin_bottom)
-          SIGFU_CON_RET_gtknameP(int,GtkWidget,gtk_widget_get_margin_end)
-          SIGFU_CON_RET_gtknameP(int,GtkWidget,gtk_widget_get_margin_start)
-          SIGFU_CON_RET_gtknameP(int,GtkWidget,gtk_widget_get_margin_top)
-          SIGFU_CON_RET_gtknameP(constcharP,GtkWidget,gtk_widget_get_name)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_mapped,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_margin_bottom,int,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_margin_end,int,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_margin_start,int,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_margin_top,int,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_name,constcharP,GtkWidgetP)
           /*table_GtkNativeP_GtkWidgetP*/ /*gtk_widget_get_native*/
           /*table_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_get_next_sibling*/
-          SIGFU_CON_RET_gtknameP(double,GtkWidget,gtk_widget_get_opacity)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_opacity,double,GtkWidgetP)
           //xx table_add(table_GtkOverflow_GtkWidgetP, "gtk_widget_get_overflow",gtk_widget_get_overflow);
           /*table_PangoContextP_GtkWidgetP*/ /*gtk_widget_get_pango_context*/
           /*table_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_get_parent*/
           /*table_void_GtkWidgetP_GtkRequisitionP_GtkRequisitionP*/ /*gtk_widget_get_preferred_size*/
           /*table_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_get_prev_sibling*/
           /*table_GdkClipboardP_GtkWidgetP*/ /*gtk_widget_get_primary_clipboard*/
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_realized)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_receives_default)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_realized,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_receives_default,gboolean,GtkWidgetP)
           //xx table_add(table_GtkSizeRequestMode_GtkWidgetP, "gtk_widget_get_request_mode",gtk_widget_get_request_mode);
           /*table_GtkRootP_GtkWidgetP*/ /*gtk_widget_get_root*/
-          SIGFU_CON_RET_gtknameP(int,GtkWidget,gtk_widget_get_scale_factor)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_sensitive)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_scale_factor,int,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_sensitive,gboolean,GtkWidgetP)
           /*table_GtkSettingsP_GtkWidgetP*/ /*gtk_widget_get_settings*/
           //xx table_add(table_int_GtkWidgetP_GtkOrientation, "gtk_widget_get_size",gtk_widget_get_size);
           //xx table_add(table_void_GtkWidgetP_intP_intP, "gtk_widget_get_size_request",gtk_widget_get_size_request);
@@ -475,45 +381,45 @@ void *wrap_reader_loop(void* user_data) {
             /*table_GtkStyleContextP_GtkWidgetP*/ /*gtk_widget_get_style_context*/
           #endif
           //xx table_add(table_GObjectP_GtkWidgetP_GType_constcharP, "gtk_widget_get_template_child",gtk_widget_get_template_child);
-          SIGFU_CON_RET_gtknameP(constcharP,GtkWidget,gtk_widget_get_tooltip_markup)
-          SIGFU_CON_RET_gtknameP(constcharP,GtkWidget,gtk_widget_get_tooltip_text)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_tooltip_markup,constcharP,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_tooltip_text,constcharP,GtkWidgetP)
           //xx table_add(table_GtkAlign_GtkWidgetP, "gtk_widget_get_valign",gtk_widget_get_valign);
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_vexpand)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_vexpand_set)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_get_visible)
-          SIGFU_CON_RET_gtknameP(int,GtkWidget,gtk_widget_get_width)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_grab_focus)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_vexpand,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_vexpand_set,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_visible,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_get_width,int,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_grab_focus,gboolean,GtkWidgetP)
           //xx table_add(table_gboolean_GtkWidgetP_constcharP, "gtk_widget_has_css_class",gtk_widget_has_css_class);
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_has_default)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_has_focus)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_has_visible_focus)
+          SIGFU_CON_RET_PAR1(gtk_widget_has_default,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_has_focus,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_has_visible_focus,gboolean,GtkWidgetP)
           #if GTK_MINOR_VERSION < 10
-            SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_hide)
+            SIGFU_CON_VOID_PAR1(gtk_widget_hide,GtkWidgetP)
           #endif
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_in_destruction)
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_init_template)
+          SIGFU_CON_RET_PAR1(gtk_widget_in_destruction,gboolean,GtkWidgetP)
+          SIGFU_CON_VOID_PAR1(gtk_widget_init_template,GtkWidgetP)
           /*table_void_GtkWidgetP_constcharP_GActionGroupP*/ /*gtk_widget_insert_action_group*/
           /*table_void_GtkWidgetP_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_insert_after*/
           /*table_void_GtkWidgetP_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_insert_before*/
           /*table_gboolean_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_is_ancestor*/
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_is_drawable)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_is_focus)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_is_sensitive)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_is_visible)
+          SIGFU_CON_RET_PAR1(gtk_widget_is_drawable,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_is_focus,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_is_sensitive,gboolean,GtkWidgetP)
+          SIGFU_CON_RET_PAR1(gtk_widget_is_visible,gboolean,GtkWidgetP)
           //xx table_add(table_gboolean_GtkWidgetP_GtkDirectionType, "gtk_widget_keynav_failed",gtk_widget_keynav_failed);
           /*table_GListP_GtkWidgetP*/ /*gtk_widget_list_mnemonic_labels*/
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_map)
+          SIGFU_CON_VOID_PAR1(gtk_widget_map,GtkWidgetP)
           /*table_void_GtkWidgetP_GtkOrientation_int_intP_intP_intP_intP*/ /*gtk_widget_measure*/
           //xx table_add(table_gboolean_GtkWidgetP_gboolean, "gtk_widget_mnemonic_activate",gtk_widget_mnemonic_activate);
           /*table_GListModelP_GtkWidgetP*/ /*gtk_widget_observe_children*/
           /*table_GListModelP_GtkWidgetP*/ /*gtk_widget_observe_controllers*/
           /*table_GtkWidgetP_GtkWidgetP_double_double_GtkPickFlags*/ /*gtk_widget_pick*/
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_queue_allocate)
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_queue_draw)
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_queue_resize)
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_realize)
+          SIGFU_CON_VOID_PAR1(gtk_widget_queue_allocate,GtkWidgetP)
+          SIGFU_CON_VOID_PAR1(gtk_widget_queue_draw,GtkWidgetP)
+          SIGFU_CON_VOID_PAR1(gtk_widget_queue_resize,GtkWidgetP)
+          SIGFU_CON_VOID_PAR1(gtk_widget_realize,GtkWidgetP)
           /*table_void_GtkWidgetP_GtkEventControllerP*/ /*gtk_widget_remove_controller*/
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkWidget,gtk_widget_remove_css_class)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_widget_remove_css_class,GtkWidgetP,constcharP)
           /*table_void_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_remove_mnemonic_label*/
           //xx table_add(table_void_GtkWidgetP_guint, "gtk_widget_remove_tick_callback",gtk_widget_remove_tick_callback);
           //xx table_add(table_void_GtkWidgetP_gboolean, "gtk_widget_set_can_focus",gtk_widget_set_can_focus);
@@ -521,7 +427,7 @@ void *wrap_reader_loop(void* user_data) {
           //xx table_add(table_void_GtkWidgetP_gboolean, "gtk_widget_set_child_visible",gtk_widget_set_child_visible);
           //xx table_add(table_void_GtkWidgetP_constcharPP, "gtk_widget_set_css_classes",gtk_widget_set_css_classes);
           /*table_void_GtkWidgetP_GdkCursorP*/ /*gtk_widget_set_cursor*/
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkWidget,gtk_widget_set_cursor_from_name)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_widget_set_cursor_from_name,GtkWidgetP,constcharP)
           /*table_void_GtkWidgetP_GtkTextDirection*/ /*gtk_widget_set_direction*/
           //xx table_add(table_void_GtkWidgetP_gboolean, "gtk_widget_set_focusable",gtk_widget_set_focusable);
           /*table_void_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_set_focus_child*/
@@ -542,7 +448,7 @@ void *wrap_reader_loop(void* user_data) {
           //xx table_add(table_void_GtkWidgetP_int, "gtk_widget_set_margin_end",gtk_widget_set_margin_end);
           //xx table_add(table_void_GtkWidgetP_int, "gtk_widget_set_margin_start",gtk_widget_set_margin_start);
           //xx table_add(table_void_GtkWidgetP_int, "gtk_widget_set_margin_top",gtk_widget_set_margin_top);
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkWidget,gtk_widget_set_name)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_widget_set_name,GtkWidgetP,constcharP)
           //xx table_add(table_void_GtkWidgetP_double, "gtk_widget_set_opacity",gtk_widget_set_opacity);
           //xx table_add(table_void_GtkWidgetP_GtkOverflow, "gtk_widget_set_overflow",gtk_widget_set_overflow);
           /*table_void_GtkWidgetP_GtkWidgetP*/ /*gtk_widget_set_parent*/
@@ -550,25 +456,25 @@ void *wrap_reader_loop(void* user_data) {
           //xx table_add(table_void_GtkWidgetP_gboolean, "gtk_widget_set_sensitive",gtk_widget_set_sensitive);
           //xx table_add(table_void_GtkWidgetP_int_int, "gtk_widget_set_size_request",gtk_widget_set_size_request);
           //xx table_add(table_void_GtkWidgetP_GtkStateFlags_gboolean, "gtk_widget_set_state_flags",gtk_widget_set_state_flags);
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkWidget,gtk_widget_set_tooltip_markup)
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkWidget,gtk_widget_set_tooltip_text)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_widget_set_tooltip_markup,GtkWidgetP,constcharP)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_widget_set_tooltip_text,GtkWidgetP,constcharP)
           //xx table_add(table_void_GtkWidgetP_GtkAlign, "gtk_widget_set_valign",gtk_widget_set_valign);
           //xx table_add(table_void_GtkWidgetP_gboolean, "gtk_widget_set_vexpand",gtk_widget_set_vexpand);
           //xx table_add(table_void_GtkWidgetP_gboolean, "gtk_widget_set_vexpand_set",gtk_widget_set_vexpand_set);
           //xx table_add(table_void_GtkWidgetP_gboolean, "gtk_widget_set_visible",gtk_widget_set_visible);
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWidget,gtk_widget_should_layout)
+          SIGFU_CON_RET_PAR1(gtk_widget_should_layout,gboolean,GtkWidgetP)
           #if GTK_MINOR_VERSION < 10
-            SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_show)
+            SIGFU_CON_VOID_PAR1(gtk_widget_show,GtkWidgetP)
           #endif
           /*table_void_GtkWidgetP_constGtkAllocationP_int*/ /*gtk_widget_size_allocate*/
           /*table_void_GtkWidgetP_GtkWidgetP_GtkSnapshotP*/ /*gtk_widget_snapshot_child*/
           #if GTK_MINOR_VERSION < 12
             /*table_gboolean_GtkWidgetP_GtkWidgetP_double_double_doubleP_doubleP*/ /*gtk_widget_translate_coordinates*/
           #endif
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_trigger_tooltip_query)
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_unmap)
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_unparent)
-          SIGFU_CON_VOID_gtknameP(void,GtkWidget,gtk_widget_unrealize)
+          SIGFU_CON_VOID_PAR1(gtk_widget_trigger_tooltip_query,GtkWidgetP)
+          SIGFU_CON_VOID_PAR1(gtk_widget_unmap,GtkWidgetP)
+          SIGFU_CON_VOID_PAR1(gtk_widget_unparent,GtkWidgetP)
+          SIGFU_CON_VOID_PAR1(gtk_widget_unrealize,GtkWidgetP)
           /*table_void_GtkWidgetP_GtkStateFlags*/ /*gtk_widget_unset_state_flags*/
         /* Class methods */
           /*table_void_GtkWidgetClassP_guint_GdkModifierType_GtkShortcutFunc_constcharP_Elipse*/ /*gtk_widget_class_add_binding*/
@@ -578,16 +484,16 @@ void *wrap_reader_loop(void* user_data) {
           /*table_void_GtkWidgetClassP_constcharP_GCallback*/ /*gtk_widget_class_bind_template_callback_full*/
           /*table_void_GtkWidgetClassP_constcharP_gboolean_gssize*/ /*gtk_widget_class_bind_template_child_full*/
           /*table_GtkAccessibleRole_GtkWidgetClassP*/ /*gtk_widget_class_get_accessible_role*/
-          SIGFU_CON_RET_gtknameP(guint,GtkWidgetClass,gtk_widget_class_get_activate_signal)
-          SIGFU_CON_RET_gtknameP(constcharP,GtkWidgetClass,gtk_widget_class_get_css_name)
+          SIGFU_CON_RET_PAR1(gtk_widget_class_get_activate_signal,guint,GtkWidgetClassP)
+          SIGFU_CON_RET_PAR1(gtk_widget_class_get_css_name,constcharP,GtkWidgetClassP)
           //xx table_add(table_GType_GtkWidgetClassP, "gtk_widget_class_get_layout_manager_type",gtk_widget_class_get_layout_manager_type);
           /*table_void_GtkWidgetClassP_constcharP_constcharP_GtkWidgetActionActivateFunc*/ /*gtk_widget_class_install_action*/
           /*table_void_GtkWidgetClassP_constcharP_constcharP*/ /*gtk_widget_class_install_property_action*/
           /*table_gboolean_GtkWidgetClassP_guint_GTypeP_constcharPP_constGVariantTypePP_constcharPP*/ /*gtk_widget_class_query_action*/
           /*table_void_GtkWidgetClassP_GtkAccessibleRole*/ /*gtk_widget_class_set_accessible_role*/
           //xx table_add(table_void_GtkWidgetClassP_guint, "gtk_widget_class_set_activate_signal",gtk_widget_class_set_activate_signal);
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkWidget,gtk_widget_class_set_activate_signal_from_name)
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkWidget,gtk_widget_class_set_css_name)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_widget_class_set_activate_signal_from_name,GtkWidgetP,constcharP)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_widget_class_set_css_name,GtkWidgetP,constcharP)
           /*table_void_GtkWidgetClassP_GType*/ /*gtk_widget_class_set_layout_manager_type*/
           //xx table_add(table_void_GtkWidgetClassP_GBytesP, "gtk_widget_class_set_template",gtk_widget_class_set_template);
           /*table_void_GtkWidgetClassP_constcharP*/ /*gtk_widget_class_set_template_from_resource*/
@@ -624,49 +530,50 @@ void *wrap_reader_loop(void* user_data) {
           // void(* unroot)(GtkWidget*);
       /* GtkWindow ****************************************************001-199*/
         /* Functions */
+          SIGFU_CON_RET(gtk_window_get_default_icon_name,constcharP)
           //xx table_add(table_constcharP,"gtk_window_get_default_icon_name",gtk_window_get_default_icon_name); // const char* void
           /*table_GListModelP*/ /*gtk_window_get_toplevels*/ // GListModel* void
           /*table_GListP*/ /*gtk_window_list_toplevels*/ // GList* void
-          SIGFU_CON_VOID_PAR1(gboolean,gtk_window_set_auto_startup_notification)
+          SIGFU_CON_VOID_PAR1(gtk_window_set_auto_startup_notification,gboolean)
           //xx table_add(table_void_constcharP,"gtk_window_set_default_icon_name",gtk_window_set_default_icon_name); // void const char *
           //xx table_add(table_void_gboolean,"gtk_window_set_interactive_debugging",gtk_window_set_interactive_debugging); // void gboolean
         /* Instance methods */
-          SIGFU_CON_VOID_gtknameP(void,GtkWindow,gtk_window_close)
-          SIGFU_CON_VOID_gtknameP(void,GtkWindow,gtk_window_destroy)
-          SIGFU_CON_VOID_gtknameP(void,GtkWindow,gtk_window_fullscreen)
+          SIGFU_CON_VOID_PAR1(gtk_window_close,GtkWindowP)
+          SIGFU_CON_VOID_PAR1(gtk_window_destroy,GtkWindowP)
+          SIGFU_CON_VOID_PAR1(gtk_window_fullscreen,GtkWindowP)
           /*table_void_GtkWindowP_GdkMonitorP*/ /*gtk_window_fullscreen_on_monitor*/ // void GtkWindow* GdkMonitor*
           /*table_GtkApplication_GtkWindowP*/ /*gtk_window_get_application*/ // GtkApplication* GtkWindow*
           /*table_GtkWidgetP_GtkWindowP*/ /*gtk_window_get_child*/ // GtkWidget* GtkWindow*
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_get_decorated)
+          SIGFU_CON_RET_PAR1(gtk_window_get_decorated,gboolean,GtkWindowP)
           //xx table_add(table_void_GtkWindowP_intP_intP,"gtk_window_get_default_size",gtk_window_get_default_size); // void GtkWindow* int* int*
           /*table_GtkWidgetP_GtkWindowP*/ /*gtk_window_get_default_widget*/ // GtkWidget* GtkWindow*
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_get_deletable)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_get_destroy_with_parent)
+          SIGFU_CON_RET_PAR1(gtk_window_get_deletable,gboolean,GtkWindowP)
+          SIGFU_CON_RET_PAR1(gtk_window_get_destroy_with_parent,gboolean,GtkWindowP)
           /*table_GtkWidgetP_GtkWindowP*/ /*gtk_window_get_focus*/ // GtkWidget* GtkWindow*
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_get_focus_visible)
+          SIGFU_CON_RET_PAR1(gtk_window_get_focus_visible,gboolean,GtkWindowP)
           #if GTK_MINOR_VERSION >= 20
             table_add(table_GtkWindowGravity_GtkWindowP,"gtk_window_get_gravity",gtk_window_get_gravity); // GtkWindowGravity GtkWindow*
           #endif
           /*table_GtkWindowGroupP_GtkWindowP*/ /*gtk_window_get_group*/ // GtkWindowGroup* GtkWindow*
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_get_handle_menubar_accel)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_get_hide_on_close)
-          SIGFU_CON_RET_gtknameP(constcharP,GtkWindow,gtk_window_get_icon_name)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_get_mnemonics_visible)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_get_modal)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_get_resizable)
-          SIGFU_CON_RET_gtknameP(constcharP,GtkWindow,gtk_window_get_title)
+          SIGFU_CON_RET_PAR1(gtk_window_get_handle_menubar_accel,gboolean,GtkWindowP)
+          SIGFU_CON_RET_PAR1(gtk_window_get_hide_on_close,gboolean,GtkWindowP)
+          SIGFU_CON_RET_PAR1(gtk_window_get_icon_name,constcharP,GtkWindowP)
+          SIGFU_CON_RET_PAR1(gtk_window_get_mnemonics_visible,gboolean,GtkWindowP)
+          SIGFU_CON_RET_PAR1(gtk_window_get_modal,gboolean,GtkWindowP)
+          SIGFU_CON_RET_PAR1(gtk_window_get_resizable,gboolean,GtkWindowP)
+          SIGFU_CON_RET_PAR1(gtk_window_get_title,constcharP,GtkWindowP)
           /*table_GtkWidgetP_GtkWindowP*/ /*gtk_window_get_titlebar*/ // GtkWidget* GtkWindow*
           /*table_GtkWindowP_GtkWindowP*/ /*gtk_window_get_transient_for*/ // GtkWindow* GtkWindow*
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_has_group)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_is_active)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_is_fullscreen)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_is_maximized)
+          SIGFU_CON_RET_PAR1(gtk_window_has_group,gboolean,GtkWindowP)
+          SIGFU_CON_RET_PAR1(gtk_window_is_active,gboolean,GtkWindowP)
+          SIGFU_CON_RET_PAR1(gtk_window_is_fullscreen,gboolean,GtkWindowP)
+          SIGFU_CON_RET_PAR1(gtk_window_is_maximized,gboolean,GtkWindowP)
           #if GTK_MINOR_VERSION >= 12
-            SIGFU_CON_RET_gtknameP(gboolean,GtkWindow,gtk_window_is_suspended)
+            SIGFU_CON_RET_PAR1(gtk_window_is_suspended,gboolean,GtkWindowP)
           #endif
-          SIGFU_CON_VOID_gtknameP(void,GtkWindow,gtk_window_maximize)
-          SIGFU_CON_VOID_gtknameP(void,GtkWindow,gtk_window_minimize)
-          SIGFU_CON_VOID_gtknameP(void,GtkWindow,gtk_window_present)
+          SIGFU_CON_VOID_PAR1(gtk_window_maximize,GtkWindowP)
+          SIGFU_CON_VOID_PAR1(gtk_window_minimize,GtkWindowP)
+          SIGFU_CON_VOID_PAR1(gtk_window_present,GtkWindowP)
           #if GTK_MINOR_VERSION < 14
             //xx table_add(table_void_GtkWindowP_guint32,"gtk_window_present_with_time",gtk_window_present_with_time); // void GtkWindow* guint32
           #endif
@@ -685,17 +592,17 @@ void *wrap_reader_loop(void* user_data) {
           #endif
           //xx table_add(table_void_GtkWindowP_gboolean,"gtk_window_set_handle_menubar_accel",gtk_window_set_handle_menubar_accel); // void GtkWindow* gboolean
           //xx table_add(table_void_GtkWindowP_gboolean,"gtk_window_set_hide_on_close",gtk_window_set_hide_on_close); // void GtkWindow* gboolean
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkWindow,gtk_window_set_icon_name)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_window_set_icon_name,GtkWindowP,constcharP)
           //xx table_add(table_void_GtkWindowP_gboolean,"gtk_window_set_mnemonics_visible",gtk_window_set_mnemonics_visible); // void GtkWindow* gboolean
           //xx table_add(table_void_GtkWindowP_gboolean,"gtk_window_set_modal",gtk_window_set_modal); // void GtkWindow* gboolean
           //xx table_add(table_void_GtkWindowP_gboolean,"gtk_window_set_resizable",gtk_window_set_resizable); // void GtkWindow* gboolean
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkWindow,gtk_window_set_startup_id)
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkWindow,gtk_window_set_title)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_window_set_startup_id,GtkWindowP,constcharP)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_window_set_title,GtkWindowP,constcharP)
           /*table_void_GtkWindowP_GtkWidgetP*/ /*gtk_window_set_titlebar*/ // void GtkWindow* GtkWidget*
           /*table_void_GtkWindowP_GtkWindowP*/ /*gtk_window_set_transient_for*/ // void GtkWindow* GtkWindow*
-          SIGFU_CON_VOID_gtknameP(void,GtkWindow,gtk_window_unfullscreen)
-          SIGFU_CON_VOID_gtknameP(void,GtkWindow,gtk_window_unmaximize)
-          SIGFU_CON_VOID_gtknameP(void,GtkWindow,gtk_window_unminimize)
+          SIGFU_CON_VOID_PAR1(gtk_window_unfullscreen,GtkWindowP)
+          SIGFU_CON_VOID_PAR1(gtk_window_unmaximize,GtkWindowP)
+          SIGFU_CON_VOID_PAR1(gtk_window_unminimize,GtkWindowP)
         /* Virtual methods */
           // void activate_default (GtkWindow* window)
           // void activate_focus (GtkWindow* window)
@@ -705,47 +612,47 @@ void *wrap_reader_loop(void* user_data) {
       /* GtkLabel ***************************************************0201-0299*/
         /* Instance methods */
           // PangoAttrList *gtk_label_get_attributes (GtkLabel *self);
-          SIGFU_CON_RET_gtknameP(constcharP,GtkLabel,gtk_label_get_current_uri)
-          SIGFU_CON_RET_gtknameP(PangoEllipsizeMode,GtkLabel,gtk_label_get_ellipsize)
+          SIGFU_CON_RET_PAR1(gtk_label_get_current_uri,constcharP,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_ellipsize,PangoEllipsizeMode,GtkLabelP)
           // GMenuModel * gtk_label_get_extra_menu (GtkLabel *self);
-          SIGFU_CON_RET_gtknameP(GtkJustification,GtkLabel,gtk_label_get_justify)
-          SIGFU_CON_RET_gtknameP(constcharP,GtkLabel,gtk_label_get_label)
+          SIGFU_CON_RET_PAR1(gtk_label_get_justify,GtkJustification,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_label,constcharP,GtkLabelP)
           // PangoLayout *gtk_label_get_layout (GtkLabel *self);
           // void gtk_label_get_layout_offsets (GtkLabel *self, int *x, int *y);
-          SIGFU_CON_RET_gtknameP(int,GtkLabel,gtk_label_get_lines)
-          SIGFU_CON_RET_gtknameP(int,GtkLabel,gtk_label_get_max_width_chars)
-          SIGFU_CON_RET_gtknameP(guint,GtkLabel,gtk_label_get_mnemonic_keyval)
+          SIGFU_CON_RET_PAR1(gtk_label_get_lines,int,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_max_width_chars,int,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_mnemonic_keyval,guint,GtkLabelP)
           // GtkWidget *gtk_label_get_mnemonic_widget (GtkLabel *self);
-          SIGFU_CON_RET_gtknameP(GtkNaturalWrapMode,GtkLabel,gtk_label_get_natural_wrap_mode)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkLabel,gtk_label_get_selectable)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkLabel,gtk_label_get_selection_bounds)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkLabel,gtk_label_get_single_line_mode)
+          SIGFU_CON_RET_PAR1(gtk_label_get_natural_wrap_mode,GtkNaturalWrapMode,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_selectable,gboolean,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_selection_bounds,gboolean,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_single_line_mode,gboolean,GtkLabelP)
           // PangoTabArray * gtk_label_get_tabs (GtkLabel *self);
-          SIGFU_CON_RET_gtknameP(constcharP,GtkLabel,gtk_label_get_text)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkLabel,gtk_label_get_use_markup)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkLabel,gtk_label_get_use_underline)
-          SIGFU_CON_RET_gtknameP(int,GtkLabel,gtk_label_get_width_chars)
-          SIGFU_CON_RET_gtknameP(gboolean,GtkLabel,gtk_label_get_wrap)
-          SIGFU_CON_RET_gtknameP(PangoWrapMode,GtkLabel,gtk_label_get_wrap_mode)
-          SIGFU_CON_RET_gtknameP(float,GtkLabel,gtk_label_get_xalign)
-          SIGFU_CON_RET_gtknameP(float,GtkLabel,gtk_label_get_yalign)
+          SIGFU_CON_RET_PAR1(gtk_label_get_text,constcharP,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_use_markup,gboolean,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_use_underline,gboolean,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_width_chars,int,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_wrap,gboolean,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_wrap_mode,PangoWrapMode,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_xalign,float,GtkLabelP)
+          SIGFU_CON_RET_PAR1(gtk_label_get_yalign,float,GtkLabelP)
           // void gtk_label_select_region (GtkLabel *self, int start_offset, int end_offset);
           // void gtk_label_set_attributes (GtkLabel *self, PangoAttrList *attrs);
           //xx table_add(table_void_GtkLabelP_PangoEllipsizeMode,"gtk_label_set_ellipsize",gtk_label_set_ellipsize);
           // void gtk_label_set_extra_menu (GtkLabel *self, GMenuModel *model);
           //xx table_add(table_void_GtkLabelP_GtkJustification,"gtk_label_set_justify",gtk_label_set_justify);
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkLabel,gtk_label_set_label)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_label_set_label,GtkLabelP,constcharP)
           //xx table_add(table_void_GtkLabelP_int,"gtk_label_set_lines",gtk_label_set_lines);
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkLabel,gtk_label_set_markup)
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkLabel,gtk_label_set_markup_with_mnemonic)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_label_set_markup,GtkLabelP,constcharP)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_label_set_markup_with_mnemonic,GtkLabelP,constcharP)
           //xx table_add(table_void_GtkLabelP_int,"gtk_label_set_max_width_chars",gtk_label_set_max_width_chars);
           // void gtk_label_set_mnemonic_widget (GtkLabel *self, GtkWidget *widget);
           //xx table_add(table_void_GtkLabelP_GtkNaturalWrapMode,"gtk_label_set_natural_wrap_mode",gtk_label_set_natural_wrap_mode);
           //xx table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_selectable",gtk_label_set_selectable);
           //xx table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_single_line_mode",gtk_label_set_single_line_mode);
           // void gtk_label_set_tabs (GtkLabel *self, PangoTabArray *tabs);
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkLabel,gtk_label_set_text)
-          SIGFU_CON_VOID_gtknameP_PAR2(constcharP,GtkLabel,gtk_label_set_text_with_mnemonic)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_label_set_text,GtkLabelP,constcharP)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_label_set_text_with_mnemonic,GtkLabelP,constcharP)
           //xx table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_use_markup",gtk_label_set_use_markup);
           //xx table_add(table_void_GtkLabelP_gboolean,"gtk_label_set_use_underline",gtk_label_set_use_underline);
           //xx table_add(table_void_GtkLabelP_int,"gtk_label_set_width_chars",gtk_label_set_width_chars);
@@ -764,10 +671,10 @@ void *wrap_reader_loop(void* user_data) {
           // void gtk_text_view_scroll_to_mark (GtkTextView *text_view,GtkTextMark *mark,double within_margin,gboolean use_align,double xalign,double yalign);
           // void gtk_text_view_scroll_mark_onscreen (GtkTextView *text_view,GtkTextMark *mark);
           // gboolean gtk_text_view_move_mark_onscreen (GtkTextView *text_view,GtkTextMark *mark);
-          SIGFU_CON_RET_gtknameP(gboolean,GtkTextView,gtk_text_view_place_cursor_onscreen)
+          SIGFU_CON_RET_PAR1(gtk_text_view_place_cursor_onscreen,gboolean,GtkTextViewP)
           // void gtk_text_view_get_visible_rect (GtkTextView *text_view,GdkRectangle *visible_rect);
           //xx table_add(table_void_GtkTextViewP_gboolean,"gtk_text_view_set_cursor_visible",gtk_text_view_set_cursor_visible);
-          SIGFU_CON_RET_gtknameP(gboolean,GtkTextView,gtk_text_view_get_cursor_visible)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_cursor_visible,gboolean,GtkTextViewP)
           // void gtk_text_view_reset_cursor_blink (GtkTextView *text_view);
           // void gtk_text_view_get_cursor_locations (GtkTextView *text_view,const GtkTextIter *iter,GdkRectangle *strong,GdkRectangle *weak);
           // void gtk_text_view_get_iter_location (GtkTextView *text_view,const GtkTextIter *iter,GdkRectangle *location);
@@ -794,29 +701,29 @@ void *wrap_reader_loop(void* user_data) {
           // void gtk_text_view_set_wrap_mode (GtkTextView *text_view,GtkWrapMode wrap_mode);
           // GtkWrapMode gtk_text_view_get_wrap_mode (GtkTextView *text_view);
           //xx table_add(table_void_GtkTextViewP_gboolean,"gtk_text_view_set_editable",gtk_text_view_set_editable);
-          SIGFU_CON_RET_gtknameP(gboolean,GtkTextView,gtk_text_view_get_editable)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_editable,gboolean,GtkTextViewP)
           //xx table_add(table_void_GtkTextViewP_gboolean,"gtk_text_view_set_overwrite",gtk_text_view_set_overwrite);
-          SIGFU_CON_RET_gtknameP(gboolean,GtkTextView,gtk_text_view_get_overwrite)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_overwrite,gboolean,GtkTextViewP)
           //xx table_add(table_void_GtkTextViewP_gboolean,"gtk_text_view_set_accepts_tab",gtk_text_view_set_accepts_tab);
-          SIGFU_CON_RET_gtknameP(gboolean,GtkTextView,gtk_text_view_get_accepts_tab)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_accepts_tab,gboolean,GtkTextViewP)
           //xx table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_pixels_above_lines",gtk_text_view_set_pixels_above_lines);
-          SIGFU_CON_RET_gtknameP(int,GtkTextView,gtk_text_view_get_pixels_above_lines)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_pixels_above_lines,int,GtkTextViewP)
           //xx table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_pixels_below_lines",gtk_text_view_set_pixels_below_lines);
-          SIGFU_CON_RET_gtknameP(int,GtkTextView,gtk_text_view_get_pixels_below_lines)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_pixels_below_lines,int,GtkTextViewP)
           //xx table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_pixels_inside_wrap",gtk_text_view_set_pixels_inside_wrap);
-          SIGFU_CON_RET_gtknameP(int,GtkTextView,gtk_text_view_get_pixels_inside_wrap)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_pixels_inside_wrap,int,GtkTextViewP)
           //xx table_add(table_void_GtkTextViewP_GtkJustification,"gtk_text_view_set_justification",gtk_text_view_set_justification);
-          SIGFU_CON_RET_gtknameP(GtkJustification,GtkTextView,gtk_text_view_get_justification)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_justification,GtkJustification,GtkTextViewP)
           //xx table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_left_margin",gtk_text_view_set_left_margin);
-          SIGFU_CON_RET_gtknameP(int,GtkTextView,gtk_text_view_get_left_margin)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_left_margin,int,GtkTextViewP)
           //xx table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_right_margin",gtk_text_view_set_right_margin);
-          SIGFU_CON_RET_gtknameP(int,GtkTextView,gtk_text_view_get_right_margin)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_right_margin,int,GtkTextViewP)
           //xx table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_top_margin",gtk_text_view_set_top_margin);
-          SIGFU_CON_RET_gtknameP(int,GtkTextView,gtk_text_view_get_top_margin)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_top_margin,int,GtkTextViewP)
           //xx table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_bottom_margin",gtk_text_view_set_bottom_margin);
-          SIGFU_CON_RET_gtknameP(int,GtkTextView,gtk_text_view_get_bottom_margin)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_bottom_margin,int,GtkTextViewP)
           //xx table_add(table_void_GtkTextViewP_int,"gtk_text_view_set_indent",gtk_text_view_set_indent);
-          SIGFU_CON_RET_gtknameP(int,GtkTextView,gtk_text_view_get_indent)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_indent,int,GtkTextViewP)
           // void gtk_text_view_set_tabs (GtkTextView *text_view,PangoTabArray *tabs);
           // PangoTabArray* gtk_text_view_get_tabs (GtkTextView *text_view);
           // void gtk_text_view_set_input_purpose (GtkTextView *text_view,GtkInputPurpose purpose);
@@ -824,7 +731,7 @@ void *wrap_reader_loop(void* user_data) {
           // void gtk_text_view_set_input_hints (GtkTextView *text_view,GtkInputHints hints);
           // GtkInputHints gtk_text_view_get_input_hints (GtkTextView *text_view);
           //xx table_add(table_void_GtkTextViewP_gboolean,"gtk_text_view_set_monospace",gtk_text_view_set_monospace);
-          SIGFU_CON_RET_gtknameP(gboolean,GtkTextView,gtk_text_view_get_monospace)
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_monospace,gboolean,GtkTextViewP)
           // void gtk_text_view_set_extra_menu (GtkTextView *text_view,GMenuModel *model);
           // GMenuModel * gtk_text_view_get_extra_menu (GtkTextView *text_view);
           // PangoContext *gtk_text_view_get_rtl_context (GtkTextView *text_view);
@@ -1279,12 +1186,12 @@ static void read_opts(_args *pargs, int *pargc, char*** pargv) {
     *pargc=pos;
   }
 //
-
 int main(int argc, char **argv) {
     int stat;
     int idx;
     GtkApplication *app;
     _args args;
+
     args.app_name  = argv[0];
     args.ui_file   = NULL;
     if (access("styles.css", F_OK) == 0) {    

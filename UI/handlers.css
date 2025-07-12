@@ -1,6 +1,11 @@
 .show {
     background-color: lavender;
 }
+.rahmen {
+    border-width: 2px;
+    border-style: dashed;
+    border-color: darkgray;
+}
 .green {
     background-color: greenyellow;
 }

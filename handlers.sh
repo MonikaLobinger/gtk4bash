@@ -39,12 +39,22 @@ on_button_gtk_label_get_lines_clicked(){
     echo "gtk_label_set_text result $val"
 } > $IN
 
+on_button_gtk_widget_get_css_classes_clicked(){
+    val=
+    echo "gtk_widget_get_css_classes result"
+    read val < $OUT
+    echo "|gtk_label_set_text|result|$val"
+} > $IN
+
 on_button_gtk_window_set_auto_startup_notification_clicked() {
     echo "gtk_window_set_auto_startup_notification 1"
 } > $IN
 
 on_button_gtk_widget_get_default_direction_clicked() {
+    val=
     echo "gtk_widget_get_default_direction"
+    read val < $OUT
+    echo "gtk_label_set_text result $val"
 } > $IN
 
 on_button_gtk_window_get_set_title_clicked(){
