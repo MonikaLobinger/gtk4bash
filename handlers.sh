@@ -7,17 +7,6 @@ OUT="/tmp/${0}.${$}.out"
 
 WRAP="gtk4bash $@ -f $UI -m $ID -s $CSS -i $IN -o $OUT"
 
-on_button_get_pointer_clicked(){
-    val=
-    val2=
-    echo "get_pointer result"
-    read val < $OUT
-    #echo "|gtk_label_set_text|result|$val"
-    echo "|set_text|$val"
-    read val2 < $OUT
-    echo "|gtk_label_set_text|result|$val $val2"
-} > $IN
-
 on_button_gtk_window_get_default_icon_name_clicked(){
     val=
     echo "gtk_window_get_default_icon_name"

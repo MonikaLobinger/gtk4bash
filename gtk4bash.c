@@ -57,8 +57,45 @@ void trim(char *s) {
     if (len > 0) memmove(s, s + len, strlen(s) - len + 1);
   }
 const char*atoa(const char*s) {return s;}
-// todo !!!Das funktioniert nur für einen Pointer!!!
-void *atop(const char*s) {static void *p;sscanf(s, "%p", &p);return p;}
+
+typedef struct PTRS {void* ptr; struct PTRS*next;} PTRS;
+PTRS* pfirst=NULL;
+PTRS* plast=NULL;
+void free_ptrs() {
+    PTRS*run=pfirst;
+    while(run) {
+        pfirst=run->next;
+        free(run);
+        run=pfirst;
+    }
+    if(DEBUG) fprintf(stderr, "ENDE %s()... .\n", __func__);
+}
+void *atop(const char*s) {
+    //if(DEBUG) fprintf(stderr,"        START %s (%s)\n",__func__,s);
+    if(plast==NULL) {
+        plast=malloc(sizeof(PTRS));
+        pfirst=plast;
+    } else {
+        plast->next=malloc(sizeof(PTRS));
+        plast=plast->next;
+    }
+    plast->next=NULL;
+    sscanf(s, "%p", &(plast->ptr));
+    //if(DEBUG) fprintf(stderr,"        ENDE %s (%p)\n",__func__,plast->ptr);
+    return plast->ptr;
+}
+void *addp(void* p) {
+    if(plast==NULL) {
+        plast=malloc(sizeof(PTRS));
+        pfirst=plast;
+    } else {
+        plast->next=malloc(sizeof(PTRS));
+        plast=plast->next;
+    }
+    plast->next=NULL;
+    plast->ptr=p;
+    return plast->ptr;
+}
 
 typedef struct {
     char       *app_name;
@@ -109,7 +146,7 @@ void *wrap_reader_loop(void* user_data) {
         pthread_exit(NULL);
     }
     mkfifo(pargs->name_in, S_IRWXU);
-    pargs->fpin = fopen(pargs->name_in, "r+");    
+    pargs->fpin = fopen(pargs->name_in, "r+");
     if(!pargs->fpin) {
         fprintf(stderr, "Error opening pipe %s !\n", pargs->name_in);
         pthread_exit(NULL);
@@ -117,7 +154,7 @@ void *wrap_reader_loop(void* user_data) {
 
     if(VERBOSE) fprintf(stderr, "Using pipes out:%s in:%s\n", pargs->name_out, pargs->name_in);
 
-    char input[1024]; 
+    char input[1024];
     char strend = ' ';
     char *command = NULL;
     char *arg1 = NULL; char *arg2 = NULL; char *arg3 = NULL; char *arg4 = NULL; char *arg5 = NULL; char *arg6 = NULL;
@@ -127,41 +164,175 @@ void *wrap_reader_loop(void* user_data) {
       #pragma GCC diagnostic push
       #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
       #pragma GCC diagnostic pop
-      SIGFU_DEF_RET(GtkTextDirection,GtkTextDirection,atoi,"%i",FALSE)
-      SIGFU_DEF_RET(constcharP,const char*,atoa,"%s",FALSE)
-      SIGFU_DEF_RET_PAR1(constcairo_font_options_tP,const cairo_font_options_t *,atop,"%p",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(constcharP,const char*,atoa,"%s",FALSE,     GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(constcharP,const char*,atoa,"%s",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(constcharP,const char*,atoa,"%s",FALSE,     GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(constcharP,const char*,atoa,"%s",FALSE,     GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
-      SIGFU_DEF_ARR_PAR1(charPP,const char**,atoa,"%s",FALSE,        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(double,double,atof,"%d",FALSE,              GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(float,float,atof,"%f",FALSE,                GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(gboolean,gboolean,atoi,"%i",FALSE,          GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(gboolean,gboolean,atoi,"%i",FALSE,          GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(gboolean,gboolean,atoi,"%i",FALSE,          GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(gboolean,gboolean,atoi,"%i",FALSE,          GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(GtkJustification,GtkJustification,atoi,"%i",FALSE,      GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(GtkJustification,GtkJustification,atoi,"%i",FALSE,      GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(GtkNaturalWrapMode,GtkNaturalWrapMode,atoi,"%i",FALSE,  GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(PangoEllipsizeMode,PangoEllipsizeMode,atoi,"%i",FALSE,  GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(PangoWrapMode,PangoWrapMode,atoi,"%i",FALSE,            GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(GtkStateFlags,GtkStateFlags,atoi,"%i",FALSE,            GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(GtkTextDirection,GtkTextDirection,atoi,"%i",FALSE,      GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(guint,guint,atoi,"%i",FALSE,                GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(guint,guint,atoi,"%i",FALSE,                GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(int,int,atoi,"%i",FALSE,                    GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(int,int,atoi,"%i",FALSE,                    GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
-      SIGFU_DEF_RET_PAR1(int,int,atoi,"%i",FALSE,                    GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RET(
+        GtkTextDirection,GtkTextDirection,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        constcairo_font_options_tP,const cairo_font_options_t *,atop,"%p",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
       #pragma GCC diagnostic push
       #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
-      SIGFU_DEF_RET_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,     constcharP,const char*,atoa,"%s",FALSE,            GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,     gboolean,gboolean,atoi,"%i",FALSE,                 GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,     GtkDirectionType,GtkDirectionType,atoi,"%i",FALSE, GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,     GtkOrientation,GtkOrientation,atoi,"%i",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR2_PAR1(int,int,atoi,"%i",FALSE,               GtkOrientation,GtkOrientation,atoi,"%i",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR2_PAR3_PAR1(gboolean,gboolean,atoi,"%i",FALSE,     double,double,atof,"%d",FALSE,      double,double,atof,"%d",FALSE,      GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_RET_PAR2_PAR3_PAR4_PAR5_PAR1(gboolean,gboolean,atoi,"%i",FALSE,    int,int,atoi,"%i",FALSE,     int,int,atoi,"%i",FALSE,     int,int,atoi,"%i",FALSE,    int,int,atoi,"%i",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
+      SIGFU_DEF_RETFREE_PAR2_PAR3_PAR4_PAR1(
+        charP,char*,atoa,"%s",NONO,free,DUMMY7,SIGPAR_END,
+        constGtkTextIterP,const GtkTextIter*,atop,"%p",NONO,NOARR,DUMMY7,SIGPAR_END,
+        constGtkTextIterP,const GtkTextIter*,atop,"%p",NONO,NOARR,DUMMY7,SIGPAR_END,
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextBufferP,GtkTextBuffer*,atop,"%p",NONO,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      #pragma GCC diagnostic pop
+      SIGFU_DEF_RETARR_PAR1(
+        charPP,char**,atoa,"%s",NONO,g_strfreev,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        double,double,atof,"%d",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        float,float,atof,"%f",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        GtkJustification,GtkJustification,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        GtkJustification,GtkJustification,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        GtkNaturalWrapMode,GtkNaturalWrapMode,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        PangoEllipsizeMode,PangoEllipsizeMode,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        PangoWrapMode,PangoWrapMode,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        GtkStateFlags,GtkStateFlags,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        GtkTextDirection,GtkTextDirection,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        guint,guint,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        guint,guint,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        GtkTextBufferP,GtkTextBuffer*,atop,"%p",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      #pragma GCC diagnostic push
+      #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+      SIGFU_DEF_RET_PAR1(
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextBufferP,GtkTextBuffer*,atop,"%p",NONO,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextBufferP,GtkTextBuffer*,atop,"%p",NONO,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR1(
+        guint,guint,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextBufferP,GtkTextBuffer*,atop,"%p",NONO,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR2_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR2_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR2_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkDirectionType,GtkDirectionType,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR2_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkOrientation,GtkOrientation,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR2_PAR1(
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkOrientation,GtkOrientation,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR2_PAR3_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        double,double,atof,"%d",NONO,NOARR,DUMMY7,SIGPAR_END,
+        double,double,atof,"%d",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_RET_PAR2_PAR3_PAR4_PAR5_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
       #pragma GCC diagnostic pop
       #if FALSE
         gboolean FU(GtkWidgetClass*,guint,GType*,const char**,const GVariantType**,const char**);
@@ -176,14 +347,14 @@ void *wrap_reader_loop(void* user_data) {
         GdkCursor* FU(GtkWidget*);
         GdkDisplay* FU(GtkWidget*);
         GdkFrameClock* FU(GtkWidget*);
-        GList* FU();                   
+        GList* FU();
         GList* FU(GtkWidget*);
-        GListModel* FU();         
+        GListModel* FU();
         GListModel* FU(GtkWidget*);
         GObject* FU(GtkWidget*,GType,const char*);
         GtkAccessibleRole FU(GtkWidgetClass*);
         GtkAlign FU(GtkWidget*);
-        GtkApplication* FU(GtkWindow*);  
+        GtkApplication* FU(GtkWindow*);
         GtkLayoutManager* FU(GtkWidget*);
         GtkNative* FU(GtkWidget*);
         GtkOverflow FU(GtkWidget*);
@@ -194,7 +365,7 @@ void *wrap_reader_loop(void* user_data) {
         GtkWidget* FU(GtkWidget*);
         GtkWidget* FU(GtkWidget*,double,double,GtkPickFlags);
         GtkWidget* FU(GtkWidget*,GType);
-        GtkWidget* FU(GtkWindow*);  
+        GtkWidget* FU(GtkWindow*);
         #if GTK_MINOR_VERSION >= 20
           GtkWindowGravity FU(GtkWindow*);
         #endif
@@ -206,48 +377,175 @@ void *wrap_reader_loop(void* user_data) {
         PangoFontMap* FU(GtkWidget*);
         PangoLayout* FU(GtkWidget*,const char*);
       #endif // FALSE
-      SIGFU_DEF_VOID_PAR1(GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR1(GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR1(
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR1(
+        GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
       #pragma GCC diagnostic push
       #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
-      SIGFU_DEF_VOID_PAR1(gboolean,gboolean,atoi,"%i",FALSE)
-      SIGFU_DEF_VOID_PAR1(GtkTextDirection,GtkTextDirection,atoi,"%i",FALSE)
-      SIGFU_DEF_VOID_PAR1(constcharP,const char*,atoa,"%s",FALSE)
-      SIGFU_DEF_VOID_PAR2_PAR1(constcharP,const char*,atoa,"%s",FALSE,          GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(constcharP,const char*,atoa,"%s",FALSE,          GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(constcharP,const char*,atoa,"%s",FALSE,          GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(constcharP,const char*,atoa,"%s",FALSE,          GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(double,double,atof,"%d",FALSE,                   GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(float,float,atof,"%f",FALSE,                     GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,               GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,               GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,               GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(gboolean,gboolean,atoi,"%i",FALSE,
-                               GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(GtkJustification,GtkJustification,atoi,"%i",FALSE,         GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(GtkJustification,GtkJustification,atoi,"%i",FALSE,         GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(GtkNaturalWrapMode,GtkNaturalWrapMode,atoi,"%i",FALSE,     GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(guint,guint,atoi,"%i",FALSE,                     GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(guint,guint,atoi,"%i",FALSE,                     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(guint32,guint32,atoi,"%i",FALSE,          GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(int,int,atoi,"%i",FALSE,                         GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(int,int,atoi,"%i",FALSE,                         GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(int,int,atoi,"%i",FALSE,                         GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(PangoEllipsizeMode,PangoEllipsizeMode,atoi,"%i",FALSE,      GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(PangoWrapMode,PangoWrapMode,atoi,"%i",FALSE,                GtkLabelP,GtkLabel*,GTK_LABEL,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(GtkAccessibleRole,GtkAccessibleRole,atoi,"%i",FALSE,        GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(GType,GType,atoi,"%i",FALSE,                                GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(GType,GType,atoi,"%i",FALSE,               GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(GtkAlign,GtkAlign,atoi,"%i",FALSE,               GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(GtkOverflow,GtkOverflow,atoi,"%i",FALSE,               GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(GtkStateFlags,GtkStateFlags,atoi,"%i",FALSE,               GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR1(GtkTextDirection,GtkTextDirection,atoi,"%i",FALSE,               GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(GtkStateFlags,GtkStateFlags,atoi,"%i",FALSE,                gboolean,gboolean,atoi,"%i",FALSE,          GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(int,int,atoi,"%i",FALSE,                int,int,atoi,"%i",FALSE,          GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(int,int,atoi,"%i",FALSE,                int,int,atoi,"%i",FALSE,          GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(constcharP,const char*,atoa,"%s",FALSE,                gboolean,gboolean,atoi,"%i",FALSE,          GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(constcharP,const char*,atoa,"%s",FALSE,                constcharP,const char*,atoa,"%s",FALSE,     GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",TRUE)
-      SIGFU_DEF_VOID_PAR2_PAR3_PAR4_PAR1(constcharP,const char*,atoa,"%s",FALSE,           gboolean,gboolean,atoi,"%i",FALSE,          gssize,gssize,atoi,"%i",FALSE,     GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",TRUE)
+      SIGFU_DEF_VOID_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR1(
+        GtkTextDirection,GtkTextDirection,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        double,double,atof,"%d",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        float,float,atof,"%f",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        GtkJustification,GtkJustification,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        GtkJustification,GtkJustification,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        GtkNaturalWrapMode,GtkNaturalWrapMode,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        guint,guint,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        guint,guint,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        guint32,guint32,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextViewP,GtkTextView*,GTK_TEXT_VIEW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        PangoEllipsizeMode,PangoEllipsizeMode,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        PangoWrapMode,PangoWrapMode,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkLabelP,GtkLabel*,GTK_LABEL,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        GtkAccessibleRole,GtkAccessibleRole,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        GType,GType,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        GType,GType,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        GtkAlign,GtkAlign,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        GtkOverflow,GtkOverflow,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        GtkStateFlags,GtkStateFlags,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        GtkTextDirection,GtkTextDirection,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR1(
+        GtkTextIterP,GtkTextIter*,atop,"%p",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextBufferP,GtkTextBuffer*,GTK_TEXT_BUFFER,"%p",OOBJECT,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(
+        GtkStateFlags,GtkStateFlags,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWindowP,GtkWindow*,GTK_WINDOW,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetP,GtkWidget*,GTK_WIDGET,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR3_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        int,int,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkTextBufferP,GtkTextBuffer*,GTK_TEXT_BUFFER,"%p",OOBJECT,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
+      SIGFU_DEF_VOID_PAR2_PAR3_PAR4_PAR1(
+        constcharP,const char*,atoa,"%s",NONO,NOARR,DUMMY7,SIGPAR_END,
+        gboolean,gboolean,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        gssize,gssize,atoi,"%i",NONO,NOARR,DUMMY7,SIGPAR_END,
+        GtkWidgetClassP,GtkWidgetClass*,GTK_WIDGET_CLASS,"%p",YESYES,NOARR,DUMMY7,SIGPAR_END,
+        SIGDEF_END)
       #pragma GCC diagnostic pop
       #if FALSE
         FU(GtkWidgetClass*,const char*,const char*,GtkWidgetActionActivateFunc);
@@ -276,7 +574,7 @@ void *wrap_reader_loop(void* user_data) {
         FU(GtkWidget*,PangoFontMap*);
         FU(GtkWindow*,GtkWindow*);
         FU(GtkWindow*,GdkDisplay*);
-        FU(GtkWindow*,GdkMonitor*);  
+        FU(GtkWindow*,GdkMonitor*);
         FU(GtkWindow*,GtkApplication*);
         FU(GtkWindow*,GtkWidget);
         #if GTK_MINOR_VERSION >= 20
@@ -665,7 +963,7 @@ void *wrap_reader_loop(void* user_data) {
           // GtkWidget * gtk_text_view_new (void);
           // GtkWidget * gtk_text_view_new_with_buffer (GtkTextBuffer *buffer);
           // void gtk_text_view_set_buffer (GtkTextView *text_view,GtkTextBuffer *buffer);
-          // GtkTextBuffer *gtk_text_view_get_buffer (GtkTextView *text_view);
+          SIGFU_CON_RET_PAR1(gtk_text_view_get_buffer,GtkTextBufferP,GtkTextViewP)
           // gboolean gtk_text_view_scroll_to_iter (GtkTextView *text_view,GtkTextIter *iter,double within_margin,gboolean use_align,double xalign,double yalign);
           // void gtk_text_view_scroll_to_mark (GtkTextView *text_view,GtkTextMark *mark,double within_margin,gboolean use_align,double xalign,double yalign);
           // void gtk_text_view_scroll_mark_onscreen (GtkTextView *text_view,GtkTextMark *mark);
@@ -735,6 +1033,83 @@ void *wrap_reader_loop(void* user_data) {
           // GMenuModel * gtk_text_view_get_extra_menu (GtkTextView *text_view);
           // PangoContext *gtk_text_view_get_rtl_context (GtkTextView *text_view);
           // PangoContext *gtk_text_view_get_ltr_context (GtkTextView *text_view);
+      /* GtkTextBuffer **********************************************0401-0499*/
+        /* Instance methods */
+          // GType gtk_text_buffer_get_type(void) G_GNUC_CONST;
+          // GtkTextBuffer*gtk_text_buffer_new(GtkTextTagTable*table);
+          SIGFU_CON_RET_PAR1(gtk_text_buffer_get_line_count,int,GtkTextBufferP)
+          SIGFU_CON_RET_PAR1(gtk_text_buffer_get_char_count,int,GtkTextBufferP)
+          // GtkTextTagTable* gtk_text_buffer_get_tag_table(GtkTextBuffer*buffer);
+          SIGFU_CON_VOID_PAR1_PAR2_PAR3(gtk_text_buffer_set_text,GtkTextBufferP,constcharP,int)
+          // void gtk_text_buffer_insert(GtkTextBuffer*buffer,GtkTextIter*iter,const char*text,int len);
+          // void gtk_text_buffer_insert_at_cursor(GtkTextBuffer*buffer,const char*text,int len);
+          // gboolean gtk_text_buffer_insert_interactive(GtkTextBuffer*buffer,GtkTextIter*iter,const char*text,int len,gboolean default_editable);
+          // gboolean gtk_text_buffer_insert_interactive_at_cursor(GtkTextBuffer*buffer,const char*text,int len,gboolean default_editable);
+          // void gtk_text_buffer_insert_range(GtkTextBuffer*buffer,GtkTextIter*iter,const GtkTextIter*start,const GtkTextIter*end);
+          // gboolean gtk_text_buffer_insert_range_interactive(GtkTextBuffer*buffer,GtkTextIter*iter,const GtkTextIter*start,const GtkTextIter*end,gboolean default_editable);
+          // void gtk_text_buffer_insert_with_tags(GtkTextBuffer*buffer,GtkTextIter*iter,const char*text,int len,GtkTextTag*first_tag,...) G_GNUC_NULL_TERMINATED;
+          // void gtk_text_buffer_insert_with_tags_by_name(GtkTextBuffer*buffer,GtkTextIter*iter,const char*text,int len,const char*first_tag_name,...) G_GNUC_NULL_TERMINATED;
+          // void gtk_text_buffer_insert_markup(GtkTextBuffer*buffer,GtkTextIter*iter,const char*markup,int len);
+          // void gtk_text_buffer_delete(GtkTextBuffer*buffer,GtkTextIter*start,GtkTextIter*end);
+          // gboolean gtk_text_buffer_delete_interactive(GtkTextBuffer*buffer,GtkTextIter*start_iter,GtkTextIter*end_iter,gboolean default_editable);
+          // gboolean gtk_text_buffer_backspace(GtkTextBuffer*buffer,GtkTextIter*iter,gboolean interactive,gboolean default_editable);
+          SIGFU_CON_VOID_PAR1_PAR2_PAR3(gtk_text_buffer_set_text,GtkTextBufferP,constcharP,int)
+          SIGFU_CON_RET_PAR1_PAR2_PAR3_PAR4(gtk_text_buffer_get_text,charP,GtkTextBufferP,constGtkTextIterP,constGtkTextIterP,gboolean)
+          // char*gtk_text_buffer_get_slice(GtkTextBuffer*buffer,const GtkTextIter*start,const GtkTextIter*end,gboolean include_hidden_chars);
+          // void gtk_text_buffer_insert_paintable(GtkTextBuffer*buffer,GtkTextIter*iter,GdkPaintable*paintable);
+          // void gtk_text_buffer_insert_child_anchor(GtkTextBuffer*buffer,GtkTextIter*iter,GtkTextChildAnchor*anchor);
+          // GtkTextChildAnchor*gtk_text_buffer_create_child_anchor(GtkTextBuffer*buffer,GtkTextIter*iter);
+          #if GTK_MINOR_VERSION >= 16
+            // void gtk_text_buffer_add_mark(GtkTextBuffer*buffer,GtkTextMark*mark,const GtkTextIter*where);
+          #endif
+          // GtkTextMark*gtk_text_buffer_create_mark(GtkTextBuffer*buffer,const char*mark_name,const GtkTextIter*where,gboolean left_gravity);
+          // void gtk_text_buffer_move_mark(GtkTextBuffer*buffer,GtkTextMark*mark,const GtkTextIter*where);
+          // void gtk_text_buffer_delete_mark(GtkTextBuffer*buffer,GtkTextMark*mark);
+          // GtkTextMark* gtk_text_buffer_get_mark(GtkTextBuffer*buffer,const char*name);
+          // void gtk_text_buffer_move_mark_by_name(GtkTextBuffer*buffer,const char*name,const GtkTextIter*where);
+          // void gtk_text_buffer_delete_mark_by_name(GtkTextBuffer*buffer,const char*name);
+          // GtkTextMark* gtk_text_buffer_get_insert(GtkTextBuffer*buffer);
+          // GtkTextMark* gtk_text_buffer_get_selection_bound(GtkTextBuffer*buffer);
+          // void gtk_text_buffer_place_cursor(GtkTextBuffer*buffer,const GtkTextIter*where);
+          // void gtk_text_buffer_select_range(GtkTextBuffer*buffer,const GtkTextIter*ins,const GtkTextIter*bound);
+          // void gtk_text_buffer_apply_tag(GtkTextBuffer*buffer,GtkTextTag*tag,const GtkTextIter*start,const GtkTextIter*end);
+          // void gtk_text_buffer_remove_tag(GtkTextBuffer*buffer,GtkTextTag*tag,const GtkTextIter*start,const GtkTextIter*end);
+          // void gtk_text_buffer_apply_tag_by_name(GtkTextBuffer*buffer,const char*name,const GtkTextIter*start,const GtkTextIter*end);
+          // void gtk_text_buffer_remove_tag_by_name(GtkTextBuffer*buffer,const char*name,const GtkTextIter*start,const GtkTextIter*end);
+          // void gtk_text_buffer_remove_all_tags(GtkTextBuffer*buffer,const GtkTextIter*start,const GtkTextIter*end);
+          // GtkTextTag*gtk_text_buffer_create_tag(GtkTextBuffer*buffer,const char*tag_name,const char*first_property_name,...);
+          // gboolean gtk_text_buffer_get_iter_at_line_offset(GtkTextBuffer*buffer,GtkTextIter*iter,int line_number,int char_offset);
+          // gboolean gtk_text_buffer_get_iter_at_line_index(GtkTextBuffer*buffer,GtkTextIter*iter,int line_number,int byte_index);
+          // void gtk_text_buffer_get_iter_at_offset(GtkTextBuffer*buffer,GtkTextIter*iter,int char_offset);
+          // gboolean gtk_text_buffer_get_iter_at_line(GtkTextBuffer*buffer,GtkTextIter*iter,int line_number);
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_text_buffer_get_start_iter,GtkTextBufferP,GtkTextIterP)
+          SIGFU_CON_VOID_PAR1_PAR2(gtk_text_buffer_get_end_iter,GtkTextBufferP,GtkTextIterP)
+          // void gtk_text_buffer_get_bounds(GtkTextBuffer*buffer,GtkTextIter*start,GtkTextIter*end);
+          // void gtk_text_buffer_get_iter_at_mark(GtkTextBuffer*buffer,GtkTextIter*iter,GtkTextMark*mark);
+          // void gtk_text_buffer_get_iter_at_child_anchor(GtkTextBuffer*buffer,GtkTextIter*iter,GtkTextChildAnchor*anchor);
+          SIGFU_CON_RET_PAR1(gtk_text_buffer_get_modified,gboolean,GtkTextBufferP)
+          // void gtk_text_buffer_set_modified(GtkTextBuffer*buffer,gboolean setting);
+          SIGFU_CON_RET_PAR1(gtk_text_buffer_get_has_selection,gboolean,GtkTextBufferP)
+          // void gtk_text_buffer_add_selection_clipboard(GtkTextBuffer*buffer,GdkClipboard*clipboard);
+          // void gtk_text_buffer_remove_selection_clipboard(GtkTextBuffer*buffer,GdkClipboard*clipboard);
+          // void gtk_text_buffer_cut_clipboard(GtkTextBuffer*buffer,GdkClipboard*clipboard,gboolean default_editable);
+          // void gtk_text_buffer_copy_clipboard(GtkTextBuffer*buffer,GdkClipboard*clipboard);
+          // void gtk_text_buffer_paste_clipboard(GtkTextBuffer*buffer,GdkClipboard*clipboard,GtkTextIter*override_location,gboolean default_editable);
+          // gboolean gtk_text_buffer_get_selection_bounds(GtkTextBuffer*buffer,GtkTextIter*start,GtkTextIter*end);
+          // gboolean gtk_text_buffer_delete_selection(GtkTextBuffer*buffer,gboolean interactive,gboolean default_editable);
+          // GdkContentProvider*gtk_text_buffer_get_selection_content(GtkTextBuffer*buffer);
+          SIGFU_CON_RET_PAR1(gtk_text_buffer_get_can_undo,gboolean,GtkTextBufferP)
+          SIGFU_CON_RET_PAR1(gtk_text_buffer_get_can_redo,gboolean,GtkTextBufferP)
+          SIGFU_CON_RET_PAR1(gtk_text_buffer_get_enable_undo,gboolean,GtkTextBufferP)
+          // void gtk_text_buffer_set_enable_undo(GtkTextBuffer*buffer,gboolean enable_undo);
+          SIGFU_CON_RET_PAR1(gtk_text_buffer_get_max_undo_levels,guint,GtkTextBufferP)
+          // void gtk_text_buffer_set_max_undo_levels(GtkTextBuffer*buffer,guint max_undo_levels);
+          // void gtk_text_buffer_undo(GtkTextBuffer*buffer);
+          // void gtk_text_buffer_redo(GtkTextBuffer*buffer);
+          // void gtk_text_buffer_begin_irreversible_action(GtkTextBuffer*buffer);
+          // void gtk_text_buffer_end_irreversible_action(GtkTextBuffer*buffer);
+          // void gtk_text_buffer_begin_user_action(GtkTextBuffer*buffer);
+          // void gtk_text_buffer_end_user_action(GtkTextBuffer*buffer);
     //
     while(TRUE) {
         fgets(input, 1024, pargs->fpin);
@@ -750,48 +1125,31 @@ void *wrap_reader_loop(void* user_data) {
         if(arg3 != NULL) {*arg3++ = '\0';trim(arg3); arg4 = strchr(arg3, strend);
         } else { arg4 = NULL; }
         if(arg4 != NULL) {*arg4++ = '\0';trim(arg4);}
-        if(VERBOSE) fprintf(stderr, "CALLBACK:> %s %s %s %s\n", command, arg1 == NULL ? "NULL" : arg1, arg2 == NULL ? "NULL" : arg2, arg3 == NULL ? "NULL" : arg3);
-
+        if(VERBOSE) fprintf(stderr, "\n\nCALLBACK:> %s %s %s %s %s %s %s\n", command, arg1 == NULL ? "NULL" : arg1, arg2 == NULL ? "NULL" : arg2, arg3 == NULL ? "NULL" : arg3, arg4 == NULL ? "NULL" : arg4, arg5 == NULL ? "NULL" : arg5, arg6 == NULL ? "NULL" : arg6);
+        
         // Kommando in Tabelle suchen
           if(NULL != (sig_vu=table_get_sig_fu(command))) {
               ((sigfu)sig_vu)(pargs->builder, command, arg1,arg2,arg3,arg4,arg5,arg6);
           } else
         //
+        // Konstruktoren
+          if(!strcmp(command, "newGtkTextIter")) {
+              if(DEBUG) fprintf(stderr,"CONSTRUCT newGtkTextIter => "); \
+              GtkWidget *iter = malloc(sizeof(GtkTextIter));
+              addp(iter);
+              if(DEBUG) fprintf(stderr," %p (%s)\n",iter,__func__); \
+              fprintf(pargs->fpout, "%p\n", iter);
+              fflush(pargs->fpout);
+          } else
+        //
         // Legacy Aufrufe
-          if(!strcmp(command, "get_pointer")) {
-              GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object(pargs->builder, arg1));
-              fprintf(pargs->fpout, "%p\n", widget);  
-              fflush(pargs->fpout);
-          } else
-          if(!strcmp(command, "set_text")) {
-              void *pointer;
-              sscanf(arg1, "%p", &pointer);
-              GtkLabel *widget = GTK_LABEL(pointer);
-              gtk_widget_add_css_class(GTK_WIDGET(pointer),"green");
-              fprintf(pargs->fpout, "%p\n", widget);
-              fflush(pargs->fpout);
-          } else
-          if(!strcmp(command, "set_textview_text")) {
-              GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object(pargs->builder, arg1));
-              gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), arg2, -1); 
-          } else         
-          if(!strcmp(command, "get_textview_text")) {
-              GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object(pargs->builder, arg1));
-              GtkTextIter a, b;
-              GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)); 
-              gtk_text_buffer_get_iter_at_offset(buffer, &a, 0);
-              gtk_text_buffer_get_iter_at_offset(buffer, &b, -1);
-              gchar* mtext = gtk_text_buffer_get_text(buffer, &a, &b, FALSE);
-              fprintf(pargs->fpout, "%s\n", mtext);  
-              fflush(pargs->fpout);
-          } else
           if(!strcmp(command, "gtk_editable_get_text")) {
               GtkWidget *widget = GTK_WIDGET(gtk_builder_get_object(pargs->builder, arg1));
               const char* mtext=gtk_editable_get_text(GTK_EDITABLE(widget));
-              fprintf(pargs->fpout, "%s\n", mtext);  
+              fprintf(pargs->fpout, "%s\n", mtext);
               fflush(pargs->fpout);
           } else {
-              fprintf(pargs->fpout, "NICHT_IMPLEMENTIERT:%s\n", command);  
+              fprintf(pargs->fpout, "NICHT_IMPLEMENTIERT:%s\n", command);
               fflush(pargs->fpout);
           }
 
@@ -814,12 +1172,12 @@ void wrap_add_signals(char *filename, _args* pargs) {
     char sighandler[STRING_SIZE];
     char *a;
     int hand_count = 0;
-    
+
     pargs->SIGNALS = (char**)calloc(50, sizeof(char*));
     if(!pargs->SIGNALS) {
         if(VERBOSE) fprintf(stderr,  "Error allocating memory: pargs->SIGNALS!\n");
         return;
-    }    
+    }
     if(!file) {
         if(VERBOSE) fprintf(stderr,  "Couldn't open file %s, no signals will be auto-handled!\n", filename);
         return;
@@ -828,7 +1186,7 @@ void wrap_add_signals(char *filename, _args* pargs) {
         fgets(line, STRING_SIZE, file);
 
         if((a = strstr(line, OBJECT_TAG)) != NULL) {
-            a += strlen(OBJECT_TAG);  
+            a += strlen(OBJECT_TAG);
             int i = 0;
             for (; i < STRING_SIZE - 1 && *a != '\"'; i++)
                 objclass[i] = *a++;
@@ -837,8 +1195,8 @@ void wrap_add_signals(char *filename, _args* pargs) {
             for ( i = 0; i < STRING_SIZE - 1 && *a != '\"'; i++)
                 objname[i] = *a++;
             objname[i] = '\0';
-            continue;        
-        }            
+            continue;
+        }
         if ((a = strstr(line, SIGNAL_TAG)) != NULL) {
             a += strlen(SIGNAL_TAG);
             int i = 0;
@@ -860,7 +1218,7 @@ void wrap_add_signals(char *filename, _args* pargs) {
     }
     pargs->SIGNALS[hand_count] = NULL;
 
-    fclose(file); 
+    fclose(file);
     if(DEBUG) fprintf(stderr, "ENDE %s()...\n", __func__);
 }
 static void add_css(_args *pargs, GtkApplicationWindow *appwin) {
@@ -921,49 +1279,49 @@ static void add_css(_args *pargs, GtkApplicationWindow *appwin) {
       }
     GdkDisplay *display;
     GtkCssProvider *provider;
-    if(pargs->css_file == NULL || access(pargs->css_file, F_OK) != 0) 
+    if(pargs->css_file == NULL || access(pargs->css_file, F_OK) != 0)
         return;
     if(VERBOSE) fprintf(stderr, "Adding css file %s ...\n", pargs->css_file);
     display = gdk_display_get_default ();
     provider = gtk_css_provider_new ();
     gtk_css_provider_load_from_path(provider, pargs->css_file);
-    gtk_style_context_add_provider_for_display (display, 
-                                GTK_STYLE_PROVIDER (provider), 
+    gtk_style_context_add_provider_for_display (display,
+                                GTK_STYLE_PROVIDER (provider),
                                 GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     add_styles(pargs);
     g_object_unref(provider);
 }
-static void app_query_end(GtkApplication *app, gpointer *user_data) { 
+static void app_query_end(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
-static void app_window_added(GtkApplication *app, GtkWindow *win, gpointer *user_data) { 
+static void app_window_added(GtkApplication *app, GtkWindow *win, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
-static void app_window_removed(GtkApplication *app, GtkWindow *win, gpointer *user_data) { 
+static void app_window_removed(GtkApplication *app, GtkWindow *win, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
-static void app_command_line(GtkApplication *app, GApplicationCommandLine *cmd_line, gpointer *user_data) { 
+static void app_command_line(GtkApplication *app, GApplicationCommandLine *cmd_line, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
-static void app_handle_local_options(GtkApplication *app, GVariantDict *options, gpointer *user_data) { 
+static void app_handle_local_options(GtkApplication *app, GVariantDict *options, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
-static void app_name_lost(GtkApplication *app, gpointer *user_data) { 
+static void app_name_lost(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
-static void app_notify(GtkApplication *app, GParamSpec *pspec, gpointer *user_data) { 
+static void app_notify(GtkApplication *app, GParamSpec *pspec, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
-static void app_action_added(GtkApplication *app, gchar* action_name, gpointer *user_data) { 
+static void app_action_added(GtkApplication *app, gchar* action_name, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
-static void app_action_enabled_changed(GtkApplication *app, gchar* action_name, gboolean enabled, gpointer *user_data) { 
+static void app_action_enabled_changed(GtkApplication *app, gchar* action_name, gboolean enabled, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
-static void app_action_removed(GtkApplication *app, gchar* action_name, gpointer *user_data) { 
+static void app_action_removed(GtkApplication *app, gchar* action_name, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
-static void app_action_state_changed(GtkApplication *app, gchar* action_name, GVariant* value, gpointer *user_data) { 
+static void app_action_state_changed(GtkApplication *app, gchar* action_name, GVariant* value, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()...\n", __func__);
   }
 static void app_startup(GtkApplication *app, gpointer *user_data) {
@@ -1068,13 +1426,13 @@ static void appwin_notify(GtkApplicationWindow *appwin, GParamSpec * pspec, _arg
   }
 static void app_activate(GtkApplication *app, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()... ruft nur app_do auf\n", __func__);
-    /* Dieser Funktion endet mit dem Anzeigen des Dialogs. 
+    /* Dieser Funktion endet mit dem Anzeigen des Dialogs.
      * Danach befinden wir uns in g_application_run */
     app_do(app, user_data);
   }
 static void app_open(GtkApplication *app, GFile ** files, gint n_files, gchar *hint, gpointer *user_data) {
     if(DEBUG) fprintf(stderr, "HANDLER %s()... ruft nur app_do auf\n", __func__);
-    /* Dieser Funktion endet mit dem Anzeigen des Dialogs. 
+    /* Dieser Funktion endet mit dem Anzeigen des Dialogs.
      * Danach befinden wir uns in g_application_run */
     app_do(app, user_data);
   }
@@ -1100,6 +1458,7 @@ static void app_shutdown(GtkApplication *app, gpointer *user_data) {
         free(*tmp++);
     free(pargs->SIGNALS);pargs->SIGNALS=NULL;
     table_free();
+    free_ptrs();
     fclose(pargs->fpin);pargs->fpin=NULL;
     fflush(pargs->fpout);
     fclose(pargs->fpout);pargs->fpout=NULL;
@@ -1119,7 +1478,7 @@ static void help(char *appname) {
     -d \t\t\t Debug Output.\n\
     -v \t\t\t Verbose.\n"
     , appname);
-    
+
     exit(1);
   }
 static void read_opts(_args *pargs, int *pargc, char*** pargv) {
@@ -1131,57 +1490,57 @@ static void read_opts(_args *pargs, int *pargc, char*** pargv) {
     argc = *pargc;
     argv = *pargv;
 
-    while((opt = getopt(argc, argv, ":dvhf:s:m:o:i:")) != -1) { 
-        switch(opt) { 
-            case 'd': 
+    while((opt = getopt(argc, argv, ":dvhf:s:m:o:i:")) != -1) {
+        switch(opt) {
+            case 'd':
                 DEBUG = 1;
-                if(VERBOSE) fprintf(stderr, "-%c\n"); 
-                break; 
-            case 'v': 
+                if(VERBOSE) fprintf(stderr, "-%c\n",opt);
+                break;
+            case 'v':
                 VERBOSE = 1;
-                if(VERBOSE) fprintf(stderr, "-%c\n"); 
-                break; 
-            case 'h': 
-                if(VERBOSE) fprintf(stderr, "-%c\n"); 
+                if(VERBOSE) fprintf(stderr, "-%c\n",opt);
+                break;
+            case 'h':
+                if(VERBOSE) fprintf(stderr, "-%c\n",opt);
                 help(pargs->app_name);
-                break; 
-            case 'f': 
+                break;
+            case 'f':
                 if(VERBOSE) fprintf(stderr, "-%c: %s\n", opt, optarg);
                 if(optarg[0]=='-') fprintf(stderr, "ACHTUNG: -%c: %s\n", opt, optarg);
                 pargs->ui_file  = optarg;
-                break; 
-            case 's': 
+                break;
+            case 's':
                 if(VERBOSE) fprintf(stderr, "-%c: %s\n", opt, optarg);
                 if(optarg[0]=='-') fprintf(stderr, "ACHTUNG: -%c: %s\n", opt, optarg);
                 pargs->css_file  = optarg;
-                break; 
-            case 'm': 
+                break;
+            case 'm':
                 if(VERBOSE) fprintf(stderr, "-%c: %s\n", opt, optarg);
                 if(optarg[0]=='-') fprintf(stderr, "ACHTUNG: -%c: %s\n", opt, optarg);
                 pargs->win_id  = optarg;
-                break; 
-            case 'o': 
+                break;
+            case 'o':
                 if(VERBOSE) fprintf(stderr, "-%c: %s\n", opt, optarg);
                 if(optarg[0]=='-') fprintf(stderr, "ACHTUNG: -%c: %s\n", opt, optarg);
                 pargs->name_out  = optarg;
-                break; 
-            case 'i': 
+                break;
+            case 'i':
                 if(VERBOSE) fprintf(stderr, "-%c: %s\n", opt, optarg);
                 if(optarg[0]=='-') fprintf(stderr, "ACHTUNG: -%c: %s\n", opt, optarg);
                 pargs->name_in  = optarg;
-                break; 
-            case ':': 
-                if(VERBOSE) fprintf(stderr, "Die Option braucht einen Wert\n"); 
-                break; 
-            case '?': 
+                break;
+            case ':':
+                if(VERBOSE) fprintf(stderr, "Die Option braucht einen Wert\n");
+                break;
+            case '?':
                 if(VERBOSE) fprintf(stderr, "Option %c wird nicht unterstützt\n", optopt);
-                break; 
-        } 
-    } 
+                break;
+        }
+    }
     for(pos=1; optind < argc; optind++) {
-        if(VERBOSE) fprintf(stderr, "argv[%i]=%s\n", pos,argv[optind]); 
+        if(VERBOSE) fprintf(stderr, "argv[%i]=%s\n", pos,argv[optind]);
         argv[pos++]=argv[optind];
-    }  
+    }
     *pargc=pos;
   }
 //
@@ -1190,10 +1549,9 @@ int main(int argc, char **argv) {
     int idx;
     GtkApplication *app;
     _args args;
-
     args.app_name  = argv[0];
     args.ui_file   = NULL;
-    if (access("styles.css", F_OK) == 0) {    
+    if (access("styles.css", F_OK) == 0) {
         args.css_file  = "styles.css";
     } else {
         args.css_file  = NULL;
@@ -1209,7 +1567,7 @@ int main(int argc, char **argv) {
 
     read_opts(&args, &argc, &argv);
     if(DEBUG) fprintf(stderr, "MAIN Optionen eingelesen ...\n");
-    if(!args.ui_file) 
+    if(!args.ui_file)
         help(args.app_name);
     if((args.name_out && !args.name_in) || (args.name_in && !args.name_out))
         help(args.app_name);
@@ -1217,6 +1575,15 @@ int main(int argc, char **argv) {
     if(VERBOSE) fprintf(stderr, "UI-Datei: %s; TOP-WINDOW: %s\n", args.ui_file, args.win_id);
 
     app = gtk_application_new(APP_ID, G_APPLICATION_HANDLES_OPEN);
+#ifdef NENE    
+    fprintf(stderr,"1 %i\n",GTK_IS_TEXT_BUFFER(NULL));
+    fprintf(stderr,"2 %i\n",GTK_IS_TEXT_BUFFER(app));
+    fprintf(stderr,"3 %i\n",GTK_IS_TEXT_BUFFER(22));
+    fprintf(stderr,"1 %i\n",GTK_IS_TEXT_BUFFER(NULL));
+    fprintf(stderr,"2 %i\n",GTK_IS_TEXT_BUFFER(app));
+    return(0);
+#endif    
+
     if(DEBUG) fprintf(stderr, "MAIN Neue Applikation ...\n");
     #ifdef ACTIVATE_EMPTY_HANDLERS
       // Empty handlers, perhabs to be used later

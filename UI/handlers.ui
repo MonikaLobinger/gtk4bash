@@ -23,12 +23,6 @@
           </object>
         </child>
         <child>
-          <object class="GtkButton" id="get_pointer">
-            <property name="label">get_pointer</property>
-            <signal name="clicked" handler="on_button_get_pointer_clicked"/>
-          </object>
-        </child>
-        <child>
           <object class="GtkButton" id="gtk_window_get_default_icon_name">
             <property name="label">gtk_window_get_default_icon_name</property>
             <signal name="clicked" handler="on_button_gtk_window_get_default_icon_name_clicked"/>
