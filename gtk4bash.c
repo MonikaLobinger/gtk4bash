@@ -68,7 +68,7 @@ void free_ptrs() {
         free(run);
         run=pfirst;
     }
-    if(DEBUG) fprintf(stderr, "ENDE %s()... .\n", __func__);
+    plast=NULL;
 }
 void *atop(const char*s) {
     //if(DEBUG) fprintf(stderr,"        START %s (%s)\n",__func__,s);
@@ -1132,14 +1132,18 @@ void *wrap_reader_loop(void* user_data) {
               ((sigfu)sig_vu)(pargs->builder, command, arg1,arg2,arg3,arg4,arg5,arg6);
           } else
         //
-        // Konstruktoren
+        // Konstruktoren und Memory
           if(!strcmp(command, "newGtkTextIter")) {
-              if(DEBUG) fprintf(stderr,"CONSTRUCT newGtkTextIter => "); \
+              //if(DEBUG) fprintf(stderr,"CONSTRUCT newGtkTextIter => ");
               GtkWidget *iter = malloc(sizeof(GtkTextIter));
               addp(iter);
-              if(DEBUG) fprintf(stderr," %p (%s)\n",iter,__func__); \
+              //if(DEBUG) fprintf(stderr," %p (%s)\n",iter,__func__);
               fprintf(pargs->fpout, "%p\n", iter);
               fflush(pargs->fpout);
+          } else
+          if(!strcmp(command, "free")) {
+              //if(DEBUG) fprintf(stderr,"FREE  (%s)\n",__func__);
+              free_ptrs();
           } else
         //
         // Legacy Aufrufe
@@ -1547,7 +1551,8 @@ static void read_opts(_args *pargs, int *pargc, char*** pargv) {
 int main(int argc, char **argv) {
     int stat;
     int idx;
-    GtkApplication *app;
+    //GtkApplication *app;
+  	g_autoptr(AdwApplication) app = NULL;
     _args args;
     args.app_name  = argv[0];
     args.ui_file   = NULL;
@@ -1574,15 +1579,11 @@ int main(int argc, char **argv) {
     if(VERBOSE) for(idx=0; idx < argc; idx++)fprintf(stderr, "%i: %s\n", idx, argv[idx]);
     if(VERBOSE) fprintf(stderr, "UI-Datei: %s; TOP-WINDOW: %s\n", args.ui_file, args.win_id);
 
-    app = gtk_application_new(APP_ID, G_APPLICATION_HANDLES_OPEN);
-#ifdef NENE    
-    fprintf(stderr,"1 %i\n",GTK_IS_TEXT_BUFFER(NULL));
-    fprintf(stderr,"2 %i\n",GTK_IS_TEXT_BUFFER(app));
-    fprintf(stderr,"3 %i\n",GTK_IS_TEXT_BUFFER(22));
-    fprintf(stderr,"1 %i\n",GTK_IS_TEXT_BUFFER(NULL));
-    fprintf(stderr,"2 %i\n",GTK_IS_TEXT_BUFFER(app));
-    return(0);
-#endif    
+    //app = gtk_application_new(APP_ID, G_APPLICATION_HANDLES_OPEN);
+	  app = adw_application_new (APP_ID, /*G_APPLICATION_HANDLES_COMMAND_LINE |*/ G_APPLICATION_NON_UNIQUE);
+	  //g_signal_connect (app, "handle-local-options", G_CALLBACK(local_options_cb), results);
+	  //g_signal_connect (app, "command-line", G_CALLBACK(command_line_cb), results);
+
 
     if(DEBUG) fprintf(stderr, "MAIN Neue Applikation ...\n");
     #ifdef ACTIVATE_EMPTY_HANDLERS
